@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const response = await sql`
     INSERT INTO users(
     name, 
-    emai, 
+    email, 
     clerk_id
     )
     VALUES(
