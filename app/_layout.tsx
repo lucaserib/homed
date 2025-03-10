@@ -2,11 +2,16 @@ import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
 import 'global.css';
 import { useEffect } from 'react';
-import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
+import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
+import { tokenCache } from 'cache';
+
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+
+if (!publishableKey) {
+  throw new Error('Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env');
+}
 
 export default function RootLayout() {
-  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
-
   const [fontsLoaded] = useFonts({
     'Jakarta-Bold': require('../assets/fonts/PlusJakartaSans-Bold.ttf'),
     'Jakarta-ExtraBold': require('../assets/fonts/PlusJakartaSans-ExtraBold.ttf'),
@@ -17,27 +22,24 @@ export default function RootLayout() {
     'Jakarta-SemiBold': require('../assets/fonts/PlusJakartaSans-SemiBold.ttf'),
   });
 
-  if (!publishableKey) {
-    throw new Error('Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env');
-  }
-
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) return null;
-
+  if (!fontsLoaded) {
+    return null;
+  }
   return (
-    <ClerkProvider publishableKey={publishableKey}>
-      {/* <ClerkLoaded> */}
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(root)" options={{ headerShown: false }} />
-      </Stack>
-      {/* </ClerkLoaded> */}
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      <ClerkLoaded>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(root)" options={{ headerShown: false }} />
+        </Stack>
+      </ClerkLoaded>
     </ClerkProvider>
   );
 }
