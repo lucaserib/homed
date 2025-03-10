@@ -152,7 +152,7 @@ const SignUp = () => {
           <View className="min-h-[300px] rounded-2xl bg-white px-7 py-9">
             <Image source={images.check} className="mx-auto my-5 h-[110px] w-[110px]" />
 
-            <Text className=" text-center font-JakartaBold text-3xl">Verificado</Text>
+            <Text className=" font-akartaBold text-center text-3xl">Verificado</Text>
 
             <Text className="mt-2 text-center font-Jakarta text-base text-gray-400">
               Sua conta foi verificada com sucesso.
