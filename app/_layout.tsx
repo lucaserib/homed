@@ -1,3 +1,4 @@
+import 'react-native-get-random-values';
 import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
 import 'global.css';
