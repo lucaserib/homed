@@ -18,7 +18,7 @@ const FindRide = () => {
           initialLocation={userAddress!}
           containerStyle="bg-neutral-100"
           textInputBackgroundColor="#f5f5f5"
-          handlePress={() => setUserLocation(location)}
+          handlePress={(location) => setUserLocation(location)}
         />
       </View>
       <View className="my-3 ">
@@ -28,7 +28,7 @@ const FindRide = () => {
           initialLocation={destinationAddress!}
           containerStyle="bg-neutral-100"
           textInputBackgroundColor="transparent"
-          handlePress={() => setDestinationLocation(location)}
+          handlePress={(location) => setDestinationLocation(location)}
         />
       </View>
 
