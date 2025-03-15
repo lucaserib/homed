@@ -25,8 +25,10 @@ const Map = () => {
   });
 
   useEffect(() => {
-    if (Array.isArray(drivers)) {
-      if (!userLatitude || !userLongitude) return;
+    if (Array.isArray(drivers) && drivers.length > 0) {
+      if (!userLatitude || !userLongitude) {
+        return;
+      }
 
       const newMarkers = generateMarkersFromData({
         data: drivers,
@@ -34,21 +36,56 @@ const Map = () => {
         userLongitude,
       });
 
-      setMarkers(newMarkers);
+      const idCounts: Record<string, number> = {};
+      newMarkers.forEach((marker) => {
+        const id = String(marker.id);
+        idCounts[id] = (idCounts[id] || 0) + 1;
+      });
+
+      const duplicateIds = Object.entries(idCounts)
+        .filter(([_, count]) => count > 1)
+        .map(([id]) => id);
+
+      if (duplicateIds.length > 0) {
+        console.warn(`IDs duplicados encontrados: ${duplicateIds.join(', ')}. Corrigindo...`);
+
+        const fixedMarkers = newMarkers.map((marker, index) => {
+          const markerId = String(marker.id);
+          if (duplicateIds.includes(markerId) || markerId === 'NaN') {
+            return { ...marker, id: 1000 + index };
+          }
+          return marker;
+        });
+
+        setMarkers(fixedMarkers);
+      } else {
+        setMarkers(newMarkers);
+      }
     }
-  }, [drivers]);
+  }, [drivers, userLatitude, userLongitude]);
 
   useEffect(() => {
     if (markers.length > 0 && destinationLatitude && destinationLongitude) {
+      console.log('Iniciando cálculo de tempos para motoristas...');
+
       calculateDriverTimes({
         markers,
         userLongitude,
         userLatitude,
         destinationLatitude,
         destinationLongitude,
-      }).then((drivers) => {
-        setDrivers(drivers as MarkerData[]);
-      });
+      })
+        .then((driversWithTimes) => {
+          if (driversWithTimes) {
+            console.log(`Tempos calculados para ${driversWithTimes.length} motoristas`);
+            setDrivers(driversWithTimes);
+          } else {
+            console.warn('calculateDriverTimes retornou undefined');
+          }
+        })
+        .catch((err) => {
+          console.error('Erro ao calcular tempos dos motoristas:', err);
+        });
     }
   }, [markers, destinationLatitude, destinationLongitude]);
 
@@ -80,13 +117,14 @@ const Map = () => {
       initialRegion={region}>
       {markers.map((marker) => (
         <Marker
-          key={marker.id}
+          key={`marker-${marker.id}`} // Chave única garantida
           coordinate={{
             latitude: marker.latitude,
             longitude: marker.longitude,
           }}
           title={marker.title}
-          image={selectedDriver === marker.id ? icons.selectedMarker : icons.marker}></Marker>
+          image={selectedDriver === marker.id ? icons.selectedMarker : icons.marker}
+        />
       ))}
     </MapView>
   );
