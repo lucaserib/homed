@@ -1,10 +1,29 @@
-import { View, Text, Image } from 'react-native';
-import React from 'react';
+import { View, Text, Image, Alert } from 'react-native';
+import React, { useCallback } from 'react';
 import CustomButton from './CustomButton';
 import { icons } from '../constants/index';
+import { useSSO } from '@clerk/clerk-expo';
+import { googleOAuth } from 'cache';
+import { router } from 'expo-router';
 
 const OAuth = () => {
-  const handleGoogleSignIn = async () => {};
+  const { startSSOFlow } = useSSO();
+
+  const handleGoogleSignIn = useCallback(async () => {
+    try {
+      const result = await googleOAuth(startSSOFlow);
+
+      if (result.success) {
+        Alert.alert('Sucesso', result.message);
+        router.push('/(root)/(tabs)/home');
+      } else {
+        Alert.alert('Erro', result.message);
+      }
+    } catch (err) {
+      console.error(JSON.stringify(err, null, 2));
+      Alert.alert('Erro', 'falha na autenticação');
+    }
+  }, []);
   return (
     <View>
       <View className="mt-4 flex flex-row items-center justify-center gap-x-3">

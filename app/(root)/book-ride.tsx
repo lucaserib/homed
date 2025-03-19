@@ -52,7 +52,7 @@ const BookRide = () => {
             <View className="flex w-full flex-row items-center justify-between border-b border-white py-3">
               <Text className="font-JakartaRegular text-lg">Pickup Time</Text>
               <Text className="font-JakartaRegular text-lg">
-                {formatTime(driverDetails?.time || 5)}
+                {formatTime(parseInt(`${driverDetails.time}`))}
               </Text>
             </View>
 

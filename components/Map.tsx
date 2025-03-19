@@ -2,13 +2,15 @@ import { useFetch } from 'lib/fetch';
 import { icons } from '../constants';
 import { calculateDriverTimes, calculateRegion, generateMarkersFromData } from 'lib/map';
 import React, { useEffect, useState } from 'react';
-import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_DEFAULT, Polyline } from 'react-native-maps';
 import { useLocationStore, useDriverStore } from 'store';
 import { Driver, MarkerData } from 'types/type';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 const Map = () => {
   const { data: drivers, loading, error } = useFetch<Driver[]>('/(api)/driver');
+
+  const [routeCoordinates, setRouteCoordinates] = useState<any[]>([]);
 
   const { userLongitude, userLatitude, destinationLatitude, destinationLongitude } =
     useLocationStore();
@@ -25,10 +27,58 @@ const Map = () => {
   });
 
   useEffect(() => {
-    if (Array.isArray(drivers) && drivers.length > 0) {
-      if (!userLatitude || !userLongitude) {
-        return;
+    const fetchRouteFromGoogleAPI = async () => {
+      if (!userLatitude || !userLongitude || !destinationLatitude || !destinationLongitude) return;
+
+      try {
+        const response = await fetch(`https://routes.googleapis.com/directions/v2:computeRoutes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': process.env.EXPO_PUBLIC_GOOGLE_API_KEY || '',
+            'X-Goog-FieldMask': 'routes.polyline.encodedPolyline',
+          } as HeadersInit,
+          body: JSON.stringify({
+            origin: {
+              location: {
+                latLng: {
+                  latitude: userLatitude,
+                  longitude: userLongitude,
+                },
+              },
+            },
+            destination: {
+              location: {
+                latLng: {
+                  latitude: destinationLatitude,
+                  longitude: destinationLongitude,
+                },
+              },
+            },
+            travelMode: 'DRIVE',
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.routes && data.routes.length > 0 && data.routes[0].polyline) {
+          const encodedPolyline = data.routes[0].polyline.encodedPolyline;
+          const decodedCoords = decodePolyline(encodedPolyline);
+          setRouteCoordinates(decodedCoords);
+        } else {
+          console.warn('No route data found:', data);
+        }
+      } catch (error) {
+        console.error('Error fetching route:', error);
       }
+    };
+
+    fetchRouteFromGoogleAPI();
+  }, [userLatitude, userLongitude, destinationLatitude, destinationLongitude]);
+
+  useEffect(() => {
+    if (Array.isArray(drivers)) {
+      if (!userLatitude || !userLongitude) return;
 
       const newMarkers = generateMarkersFromData({
         data: drivers,
@@ -36,31 +86,7 @@ const Map = () => {
         userLongitude,
       });
 
-      const idCounts: Record<string, number> = {};
-      newMarkers.forEach((marker) => {
-        const id = String(marker.id);
-        idCounts[id] = (idCounts[id] || 0) + 1;
-      });
-
-      const duplicateIds = Object.entries(idCounts)
-        .filter(([_, count]) => count > 1)
-        .map(([id]) => id);
-
-      if (duplicateIds.length > 0) {
-        console.warn(`IDs duplicados encontrados: ${duplicateIds.join(', ')}. Corrigindo...`);
-
-        const fixedMarkers = newMarkers.map((marker, index) => {
-          const markerId = String(marker.id);
-          if (duplicateIds.includes(markerId) || markerId === 'NaN') {
-            return { ...marker, id: 1000 + index };
-          }
-          return marker;
-        });
-
-        setMarkers(fixedMarkers);
-      } else {
-        setMarkers(newMarkers);
-      }
+      setMarkers(newMarkers);
     }
   }, [drivers, userLatitude, userLongitude]);
 
@@ -105,6 +131,49 @@ const Map = () => {
     );
   }
 
+  function decodePolyline(encoded: string) {
+    if (!encoded) return [];
+
+    const points = [];
+    let index = 0,
+      lat = 0,
+      lng = 0;
+
+    while (index < encoded.length) {
+      let b,
+        shift = 0,
+        result = 0;
+
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      const dlat = result & 1 ? ~(result >> 1) : result >> 1;
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      const dlng = result & 1 ? ~(result >> 1) : result >> 1;
+      lng += dlng;
+
+      points.push({
+        latitude: lat / 1e5,
+        longitude: lng / 1e5,
+      });
+    }
+
+    return points;
+  }
+
   return (
     <MapView
       provider={PROVIDER_DEFAULT}
@@ -117,7 +186,7 @@ const Map = () => {
       initialRegion={region}>
       {markers.map((marker) => (
         <Marker
-          key={`marker-${marker.id}`} // Chave única garantida
+          key={marker.id}
           coordinate={{
             latitude: marker.latitude,
             longitude: marker.longitude,
@@ -126,6 +195,29 @@ const Map = () => {
           image={selectedDriver === marker.id ? icons.selectedMarker : icons.marker}
         />
       ))}
+
+      {destinationLatitude && destinationLongitude && (
+        <>
+          <Marker
+            key="destination"
+            coordinate={{
+              latitude: destinationLatitude,
+              longitude: destinationLongitude,
+            }}
+            title="Destination"
+            image={icons.pin}
+          />
+
+          {routeCoordinates.length > 0 && (
+            <Polyline
+              coordinates={routeCoordinates}
+              strokeColor="#0286ff"
+              strokeWidth={3}
+              lineDashPattern={[0]}
+            />
+          )}
+        </>
+      )}
     </MapView>
   );
 };
