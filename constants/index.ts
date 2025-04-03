@@ -31,6 +31,12 @@ import onboarding1 from '../assets/images/onboarding1.png';
 import onboarding2 from '../assets/images/onboarding2.png';
 import onboarding3 from '../assets/images/onboarding3.png';
 import signUpCar from '../assets/images/signup-car.png';
+import phone from '../assets/icons/phone.png';
+import license from '../assets/icons/license.png';
+import specialty from '../assets/icons/specialty.png';
+import document from '../assets/icons/document.png';
+import plus from '../assets/icons/plus.png';
+import send from '../assets/icons/send.png';
 
 export const images = {
   onboarding1,
@@ -51,6 +57,7 @@ export const icons = {
   checkmark,
   close,
   dollar,
+  document,
   email,
   eyecross,
   google,
@@ -62,13 +69,18 @@ export const icons = {
   out,
   person,
   pin,
+  phone,
+  plus,
   point,
   profile,
   search,
   selectedMarker,
+  send,
   star,
   target,
   to,
+  license,
+  specialty,
 };
 
 export const onboarding = [

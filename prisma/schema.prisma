@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String         @id @default(uuid())
+  clerkid         String         @unique @map("clerk_id")
+  name            String
+  email           String         @unique
+  phone           String?
+  profileImageUrl String?        @map("profile_image_url")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  consultations   Consultation[] @relation("PatientConsultations")
+  ratings         Rating[]       @relation("PatientRatings")
+
+  @@map("users")
+}
+
+model Doctor {
+  id              String          @id @default(uuid())
+  clerkid         String          @unique @map("clerk_id")
+  email           String          @unique @map("email")
+  firstName       String          @map("first_name")
+  lastName        String          @map("last_name")
+  specialty       String
+  licenseNumber   String          @map("license_number")
+  profileImageUrl String?         @map("profile_image_url")
+  hourlyRate      Decimal         @map("hourly_rate")
+  rating          Decimal         @default(0)
+  serviceRadius   Int             @map("service_radius")
+  isAvailable     Boolean         @default(false) @map("is_available")
+  latitude        Decimal?
+  longitude       Decimal?
+  createdAt       DateTime        @default(now()) @map("created_at")
+  consultations   Consultation[]  @relation("DoctorConsultations")
+  medicalRecords  MedicalRecord[] @relation("DoctorRecords")
+  ratings         Rating[]        @relation("DoctorRatings")
+
+  @@map("doctors")
+}
+
+model Consultation {
+  consultationId  String    @id @default(uuid()) @map("consultation_id")
+  patientId       String    @map("patient_id")
+  doctorId        String?   @map("doctor_id")
+  status          String    @default("pending") // pending, accepted, in_progress, completed, cancelled
+  complaint       String?
+  originAddress   String    @map("origin_address")
+  originLatitude  Decimal   @map("origin_latitude")
+  originLongitude Decimal   @map("origin_longitude")
+  startTime       DateTime? @map("start_time")
+  endTime         DateTime? @map("end_time")
+  duration        Int? // in minutes
+  totalPrice      Decimal?  @map("total_price")
+  paymentStatus   String    @default("pending") @map("payment_status")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  patient       User           @relation("PatientConsultations", fields: [patientId], references: [id])
+  doctor        Doctor?        @relation("DoctorConsultations", fields: [doctorId], references: [id])
+  messages      Message[]
+  medicalRecord MedicalRecord?
+  payment       Payment?
+  rating        Rating?
+
+  @@map("consultations")
+}
+
+model MedicalRecord {
+  id             String   @id @default(uuid())
+  consultationId String   @unique @map("consultation_id")
+  patientId      String   @map("patient_id")
+  doctorId       String   @map("doctor_id")
+  diagnosis      String?
+  treatment      String?
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  consultation Consultation @relation(fields: [consultationId], references: [consultationId])
+  doctor       Doctor       @relation("DoctorRecords", fields: [doctorId], references: [id])
+
+  @@map("medical_records")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  consultationId String   @map("consultation_id")
+  senderId       String   @map("sender_id")
+  senderType     String   @map("sender_type") // "patient" or "doctor"
+  content        String
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  consultation Consultation @relation(fields: [consultationId], references: [consultationId])
+
+  @@map("messages")
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  consultationId  String   @unique @map("consultation_id")
+  stripePaymentId String?  @map("stripe_payment_id")
+  amount          Decimal
+  platformFee     Decimal  @map("platform_fee")
+  doctorPayout    Decimal  @map("doctor_payout")
+  status          String   @default("pending") // pending, completed, failed, refunded
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  consultation Consultation @relation(fields: [consultationId], references: [consultationId])
+
+  @@map("payments")
+}
+
+model Rating {
+  id             String   @id @default(uuid())
+  consultationId String   @unique @map("consultation_id")
+  patientId      String   @map("patient_id")
+  doctorId       String   @map("doctor_id")
+  rating         Int // 1-5
+  comment        String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  consultation Consultation @relation(fields: [consultationId], references: [consultationId])
+  patient      User         @relation("PatientRatings", fields: [patientId], references: [id])
+  doctor       Doctor       @relation("DoctorRatings", fields: [doctorId], references: [id])
+}

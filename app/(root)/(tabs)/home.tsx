@@ -21,7 +21,6 @@ import { Ride } from 'types/type';
 
 export default function Page() {
   const { setUserLocation, setDestinationLocation } = useLocationStore();
-
   const { user } = useUser();
   const { data: recentRides, loading } = useFetch<Ride[]>(`/(api)/ride/${user?.id}`);
   const [hasPermissions, setHasPermissions] = useState(false);

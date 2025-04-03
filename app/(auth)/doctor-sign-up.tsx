@@ -9,14 +9,19 @@ import { useSignUp } from '@clerk/clerk-expo';
 import ReactNativeModal from 'react-native-modal';
 import { fetchAPI } from 'lib/fetch';
 
-const SignUp = () => {
+const DoctorSignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
   const [showSuccessModel, setshowSuccessModel] = useState(false);
   const [form, setForm] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     phone: '',
+    specialty: '',
+    licenseNumber: '',
+    hourlyRate: '100',
+    serviceRadius: '10',
   });
 
   const [verification, setVerification] = useState({
@@ -27,15 +32,69 @@ const SignUp = () => {
 
   const onSignUpPress = async () => {
     console.log('Clerk isLoaded:', isLoaded);
-
     if (!isLoaded) return <Text>Loading...</Text>;
 
     if (!isLoaded) return;
+
+    if (
+      !form.firstName ||
+      !form.lastName ||
+      !form.email ||
+      !form.password ||
+      !form.phone ||
+      !form.specialty ||
+      !form.licenseNumber ||
+      !form.hourlyRate ||
+      !form.serviceRadius
+    ) {
+      return Alert.alert('Erro', 'Todos os campos são obrigatórios');
+    }
+
+    const crmRegex = /^[0-9]{5,6}(-[A-Z]{2})?$/;
+    if (!crmRegex.test(form.licenseNumber)) {
+      return Alert.alert('Erro', 'Número de CRM inválido');
+    }
+
+    if (parseFloat(form.hourlyRate) < 100) {
+      return Alert.alert('Erro', 'Valor por hora inválido');
+    }
+
+    if (parseFloat(form.serviceRadius) < 10) {
+      return Alert.alert('Erro', 'Raio de serviço inválido');
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      return Alert.alert('Erro', 'Formato de email inválido');
+    }
+
+    if (form.password.length < 8) {
+      return Alert.alert('Erro', 'A senha deve ter pelo menos 8 caracteres');
+    }
+
+    const phoneRegex = /^\(?([0-9]{2})\)?[-. ]?([0-9]{4,5})[-. ]?([0-9]{4})$/;
+    if (!phoneRegex.test(form.phone)) {
+      return Alert.alert('Erro', 'Formato de telefone inválido. Use (XX) XXXXX-XXXX');
+    }
+
+    if (form.firstName.length < 2 || form.lastName.length < 2) {
+      return Alert.alert('Erro', 'Nome e sobrenome devem ter pelo menos 2 caracteres');
+    }
+
+    if (form.specialty.length < 3) {
+      return Alert.alert('Erro', 'Especialidade deve ter pelo menos 3 caracteres');
+    }
+
+    if (isNaN(parseFloat(form.hourlyRate)) || isNaN(parseFloat(form.serviceRadius))) {
+      return Alert.alert('Erro', 'Valor por hora e raio de serviço devem ser números válidos');
+    }
 
     try {
       await signUp.create({
         emailAddress: form.email,
         password: form.password,
+        firstName: form.firstName,
+        lastName: form.lastName,
       });
 
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
@@ -57,18 +116,26 @@ const SignUp = () => {
       const completeSignUp = await signUp.attemptEmailAddressVerification({
         code: verification.code,
       });
+
       if (completeSignUp.status === 'complete') {
-        await fetchAPI('/(api)/user', {
+        const { createdSessionId, createdUserId } = completeSignUp;
+
+        await fetchAPI('/(api)/doctor', {
           method: 'POST',
           body: JSON.stringify({
-            name: form.name,
+            firstName: form.firstName,
+            lastName: form.lastName,
             email: form.email,
             phone: form.phone,
-            clerkId: completeSignUp.createdUserId,
+            specialty: form.specialty,
+            licenseNumber: form.licenseNumber,
+            hourlyRate: form.hourlyRate,
+            serviceRadius: form.serviceRadius,
+            clerkId: createdUserId,
           }),
         });
+        await setActive({ session: createdSessionId });
 
-        await setActive({ session: completeSignUp.createdSessionId });
         setVerification({ ...verification, state: 'success' });
       } else {
         setVerification({ ...verification, error: 'Verification failed', state: 'failed' });
@@ -91,11 +158,19 @@ const SignUp = () => {
         <View className="p-5">
           <InputField
             placeholderTextColor="gray"
-            label="Name"
+            label="Nome"
             placeholder="Digite seu nome"
             icon={icons.person}
-            value={form.name}
-            onChangeText={(value) => setForm({ ...form, name: value })}
+            value={form.firstName}
+            onChangeText={(value) => setForm({ ...form, firstName: value })}
+          />
+          <InputField
+            placeholderTextColor="gray"
+            label="Sobrenome"
+            placeholder="Digite seu sobrenome"
+            icon={icons.person}
+            value={form.lastName}
+            onChangeText={(value) => setForm({ ...form, lastName: value })}
           />
           <InputField
             placeholderTextColor="gray"
@@ -123,6 +198,42 @@ const SignUp = () => {
             onChangeText={(value) => setForm({ ...form, phone: value })}
             keyboardType="phone-pad"
           />
+          <InputField
+            placeholderTextColor="gray"
+            label="Especialidade"
+            placeholder="Digite sua especialidade"
+            icon={icons.specialty}
+            value={form.specialty}
+            onChangeText={(value) => setForm({ ...form, specialty: value })}
+          />
+          <InputField
+            placeholderTextColor="gray"
+            label="Número de CRM"
+            placeholder="Digite seu número do seu CRM"
+            icon={icons.license}
+            value={form.licenseNumber}
+            onChangeText={(value) => setForm({ ...form, licenseNumber: value })}
+          />
+
+          <InputField
+            placeholderTextColor="gray"
+            label="Valor por Hora"
+            placeholder="Digite seu valor por hora"
+            icon={icons.dollar}
+            value={form.hourlyRate}
+            onChangeText={(value) => setForm({ ...form, hourlyRate: value })}
+            keyboardType="numeric"
+          />
+          <InputField
+            placeholderTextColor="gray"
+            label="Raio de Serviço"
+            placeholder="Digite o raio de serviço"
+            icon={icons.marker}
+            value={form.serviceRadius}
+            onChangeText={(value) => setForm({ ...form, serviceRadius: value })}
+            keyboardType="numeric"
+          />
+
           <CustomButton title="Registrar" onPress={onSignUpPress} className="mt-6" />
 
           <OAuth />
@@ -178,7 +289,11 @@ const SignUp = () => {
 
             <CustomButton
               title="Ir para Página Principal"
-              onPress={() => router.replace('/(root)/(tabs)/home')}
+              onPress={() =>
+                router.replace({
+                  pathname: '/(doctor)/(tabs)/dashboard',
+                } as any)
+              }
               className="mt-5 "
             />
           </View>
@@ -188,4 +303,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default DoctorSignUp;

@@ -1,6 +1,6 @@
 import { Text, TouchableOpacity, SafeAreaView, View, Image } from 'react-native';
 import React, { useRef, useState } from 'react';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import Swiper from 'react-native-swiper';
 import { onboarding } from '../../constants';
 import CustomButton from 'components/CustomButton';
@@ -16,7 +16,7 @@ const Onboarding = () => {
           router.replace('/(auth)/sign-up');
         }}
         className="flex w-full items-end justify-end p-5">
-        <Text className="text-md font-JakartaBold text-black">Skip</Text>
+        <Text className="text-md font-JakartaBold text-black">Pular</Text>
       </TouchableOpacity>
       <Swiper
         ref={swiperRef}
@@ -46,6 +46,11 @@ const Onboarding = () => {
           isLastSlide ? router.replace('/(auth)/sign-up') : swiperRef.current?.scrollBy(1)
         }
       />
+      <View className="mt-2 w-11/12">
+        <Link href={'/(auth)/doctor-sign-up' as any} asChild>
+          <CustomButton title="Cadastrar como Médico" bgVariant="outline" textVariant="primary" />
+        </Link>
+      </View>
     </SafeAreaView>
   );
 };

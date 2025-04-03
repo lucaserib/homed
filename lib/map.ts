@@ -16,10 +16,17 @@ export const generateMarkersFromData = ({
     const lngOffset = (Math.random() - 0.5) * 0.01; // Random offset between -0.005 and 0.005
 
     return {
+      id: driver.driver_id,
+      driver_id: driver.driver_id,
+      first_name: driver.first_name,
+      last_name: driver.last_name,
+      profile_image_url: driver.profile_image_url,
+      car_image_url: driver.car_image_url,
+      car_seats: driver.car_seats,
+      rating: driver.rating,
       latitude: userLatitude + latOffset,
       longitude: userLongitude + lngOffset,
       title: `${driver.first_name} ${driver.last_name}`,
-      ...driver,
     };
   });
 };
