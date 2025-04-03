@@ -39,18 +39,58 @@ const Onboarding = () => {
         ))}
       </Swiper>
 
-      <CustomButton
-        title={isLastSlide ? 'Get Started' : 'Next'}
-        className="mt-10 w-11/12"
-        onPress={() =>
-          isLastSlide ? router.replace('/(auth)/sign-up') : swiperRef.current?.scrollBy(1)
-        }
-      />
-      <View className="mt-2 w-11/12">
-        <Link href={'/(auth)/doctor-sign-up' as any} asChild>
-          <CustomButton title="Cadastrar como Médico" bgVariant="outline" textVariant="primary" />
-        </Link>
-      </View>
+      {isLastSlide ? (
+        <View className="mb-4 w-11/12">
+          <Text className="mb-4 text-center font-JakartaSemiBold text-lg">
+            Escolha uma opção para continuar:
+          </Text>
+
+          <Link href={'/(auth)/sign-up' as any} asChild>
+            <CustomButton
+              title="Continuar como Paciente"
+              className="mt-2"
+              IconLeft={() => (
+                <Image
+                  source={require('../../assets/icons/patient.png')}
+                  className="mr-2 h-5 w-5"
+                  tintColor="white"
+                />
+              )}
+            />
+          </Link>
+
+          <Link href={'/(auth)/doctor-sign-up' as any} asChild>
+            <CustomButton
+              title="Continuar como Médico"
+              bgVariant="outline"
+              textVariant="primary"
+              className="mt-3"
+              IconLeft={() => (
+                <Image
+                  source={require('../../assets/icons/doctor.png')}
+                  className="mr-2 h-5 w-5"
+                  tintColor="#0286FF"
+                />
+              )}
+            />
+          </Link>
+
+          <Link href={'/(auth)/sign-in' as any} asChild>
+            <CustomButton
+              title="Já tenho uma conta"
+              bgVariant="light"
+              textVariant="primary"
+              className="mt-3"
+            />
+          </Link>
+        </View>
+      ) : (
+        <CustomButton
+          title="Próximo"
+          className="mb-4 mt-10 w-11/12"
+          onPress={() => swiperRef.current?.scrollBy(1)}
+        />
+      )}
     </SafeAreaView>
   );
 };

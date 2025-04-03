@@ -23,7 +23,11 @@ const ConfirmRide = () => {
           <View className="mx-5 mt-10">
             <CustomButton
               title="Escolha a corrida"
-              onPress={() => router.push('/(root)/book-ride')}
+              onPress={() =>
+                router.push({
+                  pathname: '/(root)/book-ride',
+                } as any)
+              }
             />
           </View>
         )}

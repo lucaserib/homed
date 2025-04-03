@@ -15,8 +15,10 @@ import { useFetch, fetchAPI } from '../../../lib/fetch';
 import { router } from 'expo-router';
 import { icons, images } from '../../../constants';
 import Map from 'components/Map';
-import { styled } from 'nativewind';
+import * as NativeWind from 'nativewind';
 import { Doctor, ConsultationDetails } from '../../../types/consultation';
+
+const styled = NativeWind.styled;
 
 // Componentes estilizados
 const StyledView = styled(View);

@@ -13,8 +13,10 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useUser } from '@clerk/clerk-expo';
 import { fetchAPI } from '../../../lib/fetch';
 import { icons } from '../../../constants';
-import { styled } from 'nativewind';
+import * as NativeWind from 'nativewind';
 import type { ConsultationDetails } from '../../../types/consultation';
+
+const styled = NativeWind.styled;
 
 const StyledView = styled(View);
 const StyledText = styled(Text);

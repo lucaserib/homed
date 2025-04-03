@@ -1,4 +1,4 @@
-import { Text, ScrollView, View, Image, Alert } from 'react-native';
+import { Text, ScrollView, View, Image, Alert, ActivityIndicator } from 'react-native';
 import React, { useState } from 'react';
 import { icons, images } from '../../constants';
 import InputField from 'components/InputField';
@@ -12,6 +12,8 @@ import { fetchAPI } from 'lib/fetch';
 const SignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
   const [showSuccessModel, setshowSuccessModel] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -19,23 +21,75 @@ const SignUp = () => {
     phone: '',
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const [verification, setVerification] = useState({
     state: 'default',
     error: '',
     code: '',
   });
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+
+    if (!form.name.trim()) {
+      newErrors.name = 'Nome é obrigatório';
+      isValid = false;
+    } else if (form.name.length < 3) {
+      newErrors.name = 'Nome deve ter pelo menos 3 caracteres';
+      isValid = false;
+    }
+
+    if (!form.email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+      isValid = false;
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email)) {
+        newErrors.email = 'Formato de email inválido';
+        isValid = false;
+      }
+    }
+
+    if (!form.password.trim()) {
+      newErrors.password = 'Senha é obrigatória';
+      isValid = false;
+    } else if (form.password.length < 8) {
+      newErrors.password = 'A senha deve ter pelo menos 8 caracteres';
+      isValid = false;
+    }
+
+    if (!form.phone.trim()) {
+      newErrors.phone = 'Telefone é obrigatório';
+      isValid = false;
+    } else {
+      const phoneRegex = /^\(?([0-9]{2})\)?[-. ]?([0-9]{4,5})[-. ]?([0-9]{4})$/;
+      if (!phoneRegex.test(form.phone)) {
+        newErrors.phone = 'Formato de telefone inválido. Use (XX) XXXXX-XXXX';
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const onSignUpPress = async () => {
-    console.log('Clerk isLoaded:', isLoaded);
-
-    if (!isLoaded) return <Text>Loading...</Text>;
-
     if (!isLoaded) return;
+    if (isSubmitting) return;
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       await signUp.create({
         emailAddress: form.email,
         password: form.password,
+        firstName: form.name,
       });
 
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
@@ -46,12 +100,22 @@ const SignUp = () => {
       });
     } catch (err: any) {
       console.log(err);
-      Alert.alert('Error', err.errors[0].longMessage);
+      Alert.alert('Erro', err.errors?.[0]?.longMessage || 'Erro ao criar conta');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const onVerifyPress = async () => {
     if (!isLoaded) return;
+    if (isSubmitting) return;
+
+    if (!verification.code.trim()) {
+      setVerification({ ...verification, error: 'Código de verificação é obrigatório' });
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       const completeSignUp = await signUp.attemptEmailAddressVerification({
@@ -71,10 +135,16 @@ const SignUp = () => {
         await setActive({ session: completeSignUp.createdSessionId });
         setVerification({ ...verification, state: 'success' });
       } else {
-        setVerification({ ...verification, error: 'Verification failed', state: 'failed' });
+        setVerification({ ...verification, error: 'Verificação falhou', state: 'failed' });
       }
     } catch (err: any) {
-      setVerification({ ...verification, error: err.errors[0].longMessage, state: 'failed' });
+      setVerification({
+        ...verification,
+        error: err.errors?.[0]?.longMessage || 'Erro de verificação',
+        state: 'failed',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -91,45 +161,86 @@ const SignUp = () => {
         <View className="p-5">
           <InputField
             placeholderTextColor="gray"
-            label="Name"
-            placeholder="Digite seu nome"
+            label="Nome Completo"
+            placeholder="Digite seu nome completo"
             icon={icons.person}
             value={form.name}
-            onChangeText={(value) => setForm({ ...form, name: value })}
+            onChangeText={(value) => {
+              setForm({ ...form, name: value });
+              if (errors.name) {
+                setErrors({ ...errors, name: '' });
+              }
+            }}
           />
+          {errors.name ? <Text className="mt-1 text-sm text-danger-600">{errors.name}</Text> : null}
+
           <InputField
             placeholderTextColor="gray"
             label="Email"
             placeholder="Digite seu Email"
             icon={icons.email}
             value={form.email}
-            onChangeText={(value) => setForm({ ...form, email: value })}
+            onChangeText={(value) => {
+              setForm({ ...form, email: value });
+              if (errors.email) {
+                setErrors({ ...errors, email: '' });
+              }
+            }}
           />
+          {errors.email ? (
+            <Text className="mt-1 text-sm text-danger-600">{errors.email}</Text>
+          ) : null}
+
           <InputField
             placeholderTextColor="gray"
-            label="Password"
+            label="Senha"
             placeholder="Digite sua senha"
             icon={icons.lock}
             secureTextEntry={true}
             value={form.password}
-            onChangeText={(value) => setForm({ ...form, password: value })}
+            onChangeText={(value) => {
+              setForm({ ...form, password: value });
+              if (errors.password) {
+                setErrors({ ...errors, password: '' });
+              }
+            }}
           />
+          {errors.password ? (
+            <Text className="mt-1 text-sm text-danger-600">{errors.password}</Text>
+          ) : null}
+
           <InputField
             placeholderTextColor="gray"
             label="Telefone"
             placeholder="Digite seu telefone"
             icon={icons.phone}
             value={form.phone}
-            onChangeText={(value) => setForm({ ...form, phone: value })}
+            onChangeText={(value) => {
+              setForm({ ...form, phone: value });
+              if (errors.phone) {
+                setErrors({ ...errors, phone: '' });
+              }
+            }}
             keyboardType="phone-pad"
           />
-          <CustomButton title="Registrar" onPress={onSignUpPress} className="mt-6" />
+          {errors.phone ? (
+            <Text className="mt-1 text-sm text-danger-600">{errors.phone}</Text>
+          ) : null}
+
+          <CustomButton
+            title={isSubmitting ? 'Processando...' : 'Registrar'}
+            onPress={onSignUpPress}
+            className="mt-6"
+            disabled={isSubmitting}
+          />
 
           <OAuth />
 
-          <Link href={'/sign-in'} className="mt-10 text-center text-lg text-general-200">
-            <Text>Já tem uma conta? </Text>
-            <Text className="text-primary-500">Clique para fazer o Login</Text>
+          <Link href={'/(auth)/sign-in' as any} asChild>
+            <Text className="mt-6 text-center text-lg text-general-700">
+              Já tem uma conta?{' '}
+              <Text className="font-JakartaSemiBold text-primary-500">Faça login</Text>
+            </Text>
           </Link>
         </View>
 
@@ -151,18 +262,21 @@ const SignUp = () => {
               placeholderTextColor="gray"
               value={verification.code}
               keyboardType="numeric"
-              onChangeText={(code) => setVerification({ ...verification, code })}
+              onChangeText={(code) => setVerification({ ...verification, code, error: '' })}
             />
 
             {verification.error && (
-              <Text className="mt-1 text-sm text-red-500">{verification.error}</Text>
+              <Text className="mt-1 text-sm text-danger-600">{verification.error}</Text>
             )}
 
             <CustomButton
-              title="Verificar Email"
+              title={isSubmitting ? 'Verificando...' : 'Verificar Email'}
               onPress={onVerifyPress}
               className="mt-5 bg-success-500"
+              disabled={isSubmitting}
             />
+
+            {isSubmitting && <ActivityIndicator size="small" color="#0286FF" className="mt-2" />}
           </View>
         </ReactNativeModal>
 
@@ -170,7 +284,7 @@ const SignUp = () => {
           <View className="min-h-[300px] rounded-2xl bg-white px-7 py-9">
             <Image source={images.check} className="mx-auto my-5 h-[110px] w-[110px]" />
 
-            <Text className=" font-akartaBold text-center text-3xl">Verificado</Text>
+            <Text className="text-center font-JakartaExtraBold text-3xl">Verificado</Text>
 
             <Text className="mt-2 text-center font-Jakarta text-base text-gray-400">
               Sua conta foi verificada com sucesso.
@@ -179,7 +293,7 @@ const SignUp = () => {
             <CustomButton
               title="Ir para Página Principal"
               onPress={() => router.replace('/(root)/(tabs)/home')}
-              className="mt-5 "
+              className="mt-5"
             />
           </View>
         </ReactNativeModal>

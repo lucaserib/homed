@@ -14,9 +14,10 @@ import { useFetch, fetchAPI } from '../../../lib/fetch';
 import { useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import { icons, images } from '../../../constants';
-import { styled } from 'nativewind';
+import * as NativeWind from 'nativewind';
 
 // Componentes estilizados para uso com className
+const styled = NativeWind.styled;
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledSafeAreaView = styled(SafeAreaView);

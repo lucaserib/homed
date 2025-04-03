@@ -14,8 +14,10 @@ import { fetchAPI } from '../../lib/fetch';
 import { useLocalSearchParams, router } from 'expo-router';
 import { icons } from '../../constants';
 import ReactNativeModal from 'react-native-modal';
-import { styled } from 'nativewind';
+import * as NativeWind from 'nativewind';
 import type { ConsultationDetails } from '../../types/consultation';
+
+const styled = NativeWind.styled;
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
