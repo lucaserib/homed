@@ -37,7 +37,9 @@ import specialty from '../assets/icons/specialty.png';
 import document from '../assets/icons/document.png';
 import plus from '../assets/icons/plus.png';
 import send from '../assets/icons/send.png';
-
+import calendar from '../assets/icons/calendar.png';
+import doctor from '../assets/icons/doctor.png';
+import building from '../assets/icons/building.png';
 export const images = {
   onboarding1,
   onboarding2,
@@ -53,10 +55,13 @@ export const icons = {
   arrowDown,
   arrowUp,
   backArrow,
+  calendar,
+  building,
   chat,
   checkmark,
   close,
   dollar,
+  doctor,
   document,
   email,
   eyecross,

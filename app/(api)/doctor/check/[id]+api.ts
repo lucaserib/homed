@@ -24,8 +24,3 @@ export async function GET(request: Request, { params }: { params: { id: string }
     return Response.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }
-
-// Exportação padrão vazia - necessária para o Expo Router
-export default function DoctorCheckRoute() {
-  // Esta função não será executada, serve apenas para satisfazer o Expo Router
-}

@@ -1,4 +1,13 @@
-import { Text, SafeAreaView, ScrollView, View, Image, TouchableOpacity, Alert } from 'react-native';
+import {
+  Text,
+  SafeAreaView,
+  ScrollView,
+  View,
+  Image,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import React, { useState } from 'react';
 import { icons, images } from '../../constants';
 import InputField from 'components/InputField';
@@ -13,6 +22,7 @@ const SignIn = () => {
   const { userId } = useAuth();
   const router = useRouter();
   const [isDoctor, setIsDoctor] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     email: '',
@@ -21,6 +31,9 @@ const SignIn = () => {
 
   const onSignInPress = async () => {
     if (!isLoaded) return;
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
 
     try {
       const signInAttempt = await signIn.create({
@@ -32,9 +45,7 @@ const SignIn = () => {
         await setActive({ session: signInAttempt.createdSessionId });
 
         if (isDoctor) {
-          // Verificar se é médico
           try {
-            // Usar o userId do hook useAuth após login
             const currentUserId = userId;
             if (!currentUserId) {
               throw new Error('User ID não disponível');
@@ -42,9 +53,17 @@ const SignIn = () => {
 
             const response = await fetchAPI(`/(api)/doctor/check/${currentUserId}`);
             if (response.data) {
-              router.replace({
-                pathname: '/(doctor)/(tabs)/dashboard',
-              } as any);
+              if (response.data.approvalStatus === 'approved') {
+                router.replace({
+                  pathname: '/(doctor)/(tabs)/dashboard',
+                } as any);
+              } else {
+                Alert.alert(
+                  'Conta em análise',
+                  'Sua conta de médico ainda está em análise pela nossa equipe. Você receberá um email quando sua conta for aprovada.',
+                  [{ text: 'OK', style: 'default' }]
+                );
+              }
             } else {
               Alert.alert(
                 'Erro de acesso',
@@ -76,6 +95,8 @@ const SignIn = () => {
     } catch (err) {
       console.error(JSON.stringify(err, null, 2));
       Alert.alert('Erro de login', 'Verifique seu email e senha e tente novamente.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -94,17 +115,25 @@ const SignIn = () => {
           <View className="mb-4 flex-row justify-center rounded-xl bg-general-100 p-1">
             <TouchableOpacity
               onPress={() => setIsDoctor(false)}
-              className={`flex-1 items-center rounded-lg py-3 ${!isDoctor ? 'bg-white shadow-sm' : ''}`}>
+              className={`flex-1 items-center rounded-lg py-3 ${
+                !isDoctor ? 'bg-white shadow-sm' : ''
+              }`}>
               <Text
-                className={`font-JakartaSemiBold ${!isDoctor ? 'text-primary-500' : 'text-secondary-700'}`}>
+                className={`font-JakartaSemiBold ${
+                  !isDoctor ? 'text-primary-500' : 'text-secondary-700'
+                }`}>
                 Paciente
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setIsDoctor(true)}
-              className={`flex-1 items-center rounded-lg py-3 ${isDoctor ? 'bg-white shadow-sm' : ''}`}>
+              className={`flex-1 items-center rounded-lg py-3 ${
+                isDoctor ? 'bg-white shadow-sm' : ''
+              }`}>
               <Text
-                className={`font-JakartaSemiBold ${isDoctor ? 'text-primary-500' : 'text-secondary-700'}`}>
+                className={`font-JakartaSemiBold ${
+                  isDoctor ? 'text-primary-500' : 'text-secondary-700'
+                }`}>
                 Médico
               </Text>
             </TouchableOpacity>
@@ -117,6 +146,8 @@ const SignIn = () => {
             icon={icons.email}
             value={form.email}
             onChangeText={(value) => setForm({ ...form, email: value })}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
           <InputField
             placeholderTextColor="gray"
@@ -127,11 +158,21 @@ const SignIn = () => {
             value={form.password}
             onChangeText={(value) => setForm({ ...form, password: value })}
           />
+
+          <Link href={'/(auth)/forgot-password' as any} asChild>
+            <Text className="mt-1 text-right font-JakartaMedium text-sm text-primary-500">
+              Esqueceu sua senha?
+            </Text>
+          </Link>
+
           <CustomButton
-            title={isDoctor ? 'Entrar como Médico' : 'Entrar'}
+            title={isSubmitting ? 'Processando...' : isDoctor ? 'Entrar como Médico' : 'Entrar'}
             onPress={onSignInPress}
             className="mt-6"
+            disabled={isSubmitting}
           />
+
+          {isSubmitting && <ActivityIndicator size="small" color="#0286FF" className="mt-2" />}
 
           <OAuth />
 

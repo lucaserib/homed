@@ -1,18 +1,33 @@
-import { Text, ScrollView, View, Image, Alert, ActivityIndicator } from 'react-native';
+import {
+  Text,
+  ScrollView,
+  View,
+  Image,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import React, { useState } from 'react';
 import { icons, images } from '../../constants';
 import InputField from 'components/InputField';
 import CustomButton from 'components/CustomButton';
 import { Link, router } from 'expo-router';
-import OAuth from 'components/OAuth';
 import { useSignUp } from '@clerk/clerk-expo';
 import ReactNativeModal from 'react-native-modal';
 import { fetchAPI } from 'lib/fetch';
+import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { maskCPF, maskCNPJ } from 'lib/mask';
 
 const DoctorSignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
-  const [showSuccessModel, setshowSuccessModel] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     firstName: '',
@@ -20,9 +35,14 @@ const DoctorSignUp = () => {
     email: '',
     password: '',
     phone: '',
+    dateOfBirth: new Date(1980, 0, 1),
     specialty: '',
     licenseNumber: '',
-    hourlyRate: '100',
+    cpf: '',
+    cnpj: '',
+    companyName: '', // Razão social
+    address: '',
+    hourlyRate: '150',
     serviceRadius: '10',
   });
 
@@ -103,6 +123,40 @@ const DoctorSignUp = () => {
       }
     }
 
+    if (!form.cpf.trim()) {
+      newErrors.cpf = 'CPF é obrigatório';
+      isValid = false;
+    } else {
+      // Removendo a formatação para validar
+      const cpfClean = form.cpf.replace(/[^\d]/g, '');
+      if (cpfClean.length !== 11) {
+        newErrors.cpf = 'CPF deve ter 11 dígitos';
+        isValid = false;
+      }
+    }
+
+    if (!form.cnpj.trim()) {
+      newErrors.cnpj = 'CNPJ é obrigatório';
+      isValid = false;
+    } else {
+      // Removendo a formatação para validar
+      const cnpjClean = form.cnpj.replace(/[^\d]/g, '');
+      if (cnpjClean.length !== 14) {
+        newErrors.cnpj = 'CNPJ deve ter 14 dígitos';
+        isValid = false;
+      }
+    }
+
+    if (!form.companyName.trim()) {
+      newErrors.companyName = 'Razão Social é obrigatória';
+      isValid = false;
+    }
+
+    if (!form.address.trim()) {
+      newErrors.address = 'Endereço é obrigatório';
+      isValid = false;
+    }
+
     if (!form.hourlyRate.trim()) {
       newErrors.hourlyRate = 'Valor por hora é obrigatório';
       isValid = false;
@@ -119,8 +173,43 @@ const DoctorSignUp = () => {
       isValid = false;
     }
 
+    // Verificar idade (deve ser maior que 21 anos para médicos)
+    const today = new Date();
+    const birthDate = new Date(form.dateOfBirth);
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      const actualAge = age - 1;
+      if (actualAge < 21) {
+        newErrors.dateOfBirth = 'Você deve ter pelo menos 21 anos';
+        isValid = false;
+      }
+    } else if (age < 21) {
+      newErrors.dateOfBirth = 'Você deve ter pelo menos 21 anos';
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets && result.assets[0]) {
+      // Armazenar base64 para upload
+      const base64 = result.assets[0].base64;
+      if (base64) {
+        setProfileImage(`data:image/jpeg;base64,${base64}`);
+      }
+    }
   };
 
   const onSignUpPress = async () => {
@@ -174,6 +263,35 @@ const DoctorSignUp = () => {
       if (completeSignUp.status === 'complete') {
         const { createdSessionId, createdUserId } = completeSignUp;
 
+        const formattedDate = form.dateOfBirth.toISOString();
+
+        let imageUrl = null;
+        if (profileImage) {
+          const uploadResponse = await fetchAPI('/(api)/upload/image', {
+            method: 'POST',
+            body: JSON.stringify({
+              image: profileImage,
+              folder: 'doctors',
+              publicId: `doctor_${createdUserId}`,
+            }),
+          });
+
+          if (uploadResponse.success) {
+            imageUrl = uploadResponse.imageUrl;
+          }
+        }
+
+        await fetchAPI('/(api)/send-email', {
+          method: 'POST',
+          body: JSON.stringify({
+            recipientEmail: form.email,
+            recipientName: `${form.firstName} ${form.lastName}`,
+            recipientId: createdUserId,
+            recipientType: 'doctor',
+            emailType: 'doctor_registration',
+          }),
+        });
+
         await fetchAPI('/(api)/doctor', {
           method: 'POST',
           body: JSON.stringify({
@@ -181,13 +299,21 @@ const DoctorSignUp = () => {
             lastName: form.lastName,
             email: form.email,
             phone: form.phone,
+            dateOfBirth: formattedDate,
             specialty: form.specialty,
             licenseNumber: form.licenseNumber,
+            cpf: form.cpf.replace(/[^\d]/g, ''),
+            cnpj: form.cnpj.replace(/[^\d]/g, ''),
+            companyName: form.companyName,
+            address: form.address,
             hourlyRate: form.hourlyRate,
             serviceRadius: form.serviceRadius,
+            profileImageUrl: imageUrl,
+            approvalStatus: 'pending',
             clerkId: createdUserId,
           }),
         });
+
         await setActive({ session: createdSessionId });
 
         setVerification({ ...verification, state: 'success' });
@@ -205,17 +331,41 @@ const DoctorSignUp = () => {
     }
   };
 
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setForm({ ...form, dateOfBirth: selectedDate });
+    }
+  };
+
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="flex-1 bg-white">
-        <View className="w-ful relative h-[250px]">
-          <Image source={images.signUpCar} className="z-0 h-[250px] w-full" />
+        <View className="w-ful relative h-[180px]">
+          <Image source={images.signUpCar} className="z-0 h-[180px] w-full" />
           <Text className="absolute bottom-5 left-5 font-JakartaSemiBold text-2xl text-black">
             Criar Conta Médica
           </Text>
         </View>
 
         <View className="p-5">
+          {/* Foto de perfil */}
+          <View className="mb-5 items-center">
+            <TouchableOpacity onPress={pickImage} className="relative">
+              <View className="h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-200">
+                {profileImage ? (
+                  <Image source={{ uri: profileImage }} className="h-full w-full" />
+                ) : (
+                  <Image source={icons.doctor} className="h-8 w-8" />
+                )}
+              </View>
+              <View className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full bg-primary-500">
+                <Image source={icons.plus} className="h-4 w-4" tintColor="white" />
+              </View>
+            </TouchableOpacity>
+            <Text className="mt-2 text-center text-sm text-gray-500">Adicionar foto</Text>
+          </View>
+
           <InputField
             placeholderTextColor="gray"
             label="Nome"
@@ -262,6 +412,8 @@ const DoctorSignUp = () => {
                 setErrors({ ...errors, email: '' });
               }
             }}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
           {errors.email ? (
             <Text className="mt-1 text-sm text-danger-600">{errors.email}</Text>
@@ -303,6 +455,32 @@ const DoctorSignUp = () => {
             <Text className="mt-1 text-sm text-danger-600">{errors.phone}</Text>
           ) : null}
 
+          {/* Data de Nascimento */}
+          <View className="mb-3">
+            <Text className="mb-1 font-JakartaSemiBold text-lg">Data de Nascimento</Text>
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              className="flex-row items-center rounded-full border border-neutral-100 bg-neutral-100 p-4">
+              <Image source={icons.calendar} className="mr-3 h-6 w-6" />
+              <Text className="font-JakartaSemiBold text-[15px]">
+                {format(form.dateOfBirth, 'dd/MM/yyyy', { locale: ptBR })}
+              </Text>
+            </TouchableOpacity>
+            {errors.dateOfBirth ? (
+              <Text className="mt-1 text-sm text-danger-600">{errors.dateOfBirth}</Text>
+            ) : null}
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={form.dateOfBirth}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+              />
+            )}
+          </View>
+
           <InputField
             placeholderTextColor="gray"
             label="Especialidade"
@@ -323,7 +501,7 @@ const DoctorSignUp = () => {
           <InputField
             placeholderTextColor="gray"
             label="Número de CRM"
-            placeholder="Digite seu número do seu CRM"
+            placeholder="Digite seu número do CRM"
             icon={icons.license}
             value={form.licenseNumber}
             onChangeText={(value) => {
@@ -335,6 +513,76 @@ const DoctorSignUp = () => {
           />
           {errors.licenseNumber ? (
             <Text className="mt-1 text-sm text-danger-600">{errors.licenseNumber}</Text>
+          ) : null}
+
+          <InputField
+            placeholderTextColor="gray"
+            label="CPF"
+            placeholder="Digite seu CPF"
+            icon={icons.document}
+            value={form.cpf}
+            onChangeText={(value) => {
+              const maskedValue = maskCPF(value);
+              setForm({ ...form, cpf: maskedValue });
+              if (errors.cpf) {
+                setErrors({ ...errors, cpf: '' });
+              }
+            }}
+            keyboardType="numeric"
+            maxLength={14}
+          />
+          {errors.cpf ? <Text className="mt-1 text-sm text-danger-600">{errors.cpf}</Text> : null}
+
+          <InputField
+            placeholderTextColor="gray"
+            label="CNPJ"
+            placeholder="Digite seu CNPJ"
+            icon={icons.document}
+            value={form.cnpj}
+            onChangeText={(value) => {
+              const maskedValue = maskCNPJ(value);
+              setForm({ ...form, cnpj: maskedValue });
+              if (errors.cnpj) {
+                setErrors({ ...errors, cnpj: '' });
+              }
+            }}
+            keyboardType="numeric"
+            maxLength={18}
+          />
+          {errors.cnpj ? <Text className="mt-1 text-sm text-danger-600">{errors.cnpj}</Text> : null}
+
+          <InputField
+            placeholderTextColor="gray"
+            label="Razão Social"
+            placeholder="Digite a razão social"
+            icon={icons.building}
+            value={form.companyName}
+            onChangeText={(value) => {
+              setForm({ ...form, companyName: value });
+              if (errors.companyName) {
+                setErrors({ ...errors, companyName: '' });
+              }
+            }}
+          />
+          {errors.companyName ? (
+            <Text className="mt-1 text-sm text-danger-600">{errors.companyName}</Text>
+          ) : null}
+
+          <InputField
+            placeholderTextColor="gray"
+            label="Endereço"
+            placeholder="Digite seu endereço completo"
+            icon={icons.marker}
+            value={form.address}
+            onChangeText={(value) => {
+              setForm({ ...form, address: value });
+              if (errors.address) {
+                setErrors({ ...errors, address: '' });
+              }
+            }}
+          />
+          {errors.address ? (
+            <Text className="mt-1 text-sm text-danger-600">{errors.address}</Text>
           ) : null}
 
           <InputField
@@ -391,7 +639,7 @@ const DoctorSignUp = () => {
         <ReactNativeModal
           isVisible={verification.state === 'pending'}
           onModalHide={() => {
-            if (verification.state === 'success') setshowSuccessModel(true);
+            if (verification.state === 'success') setShowSuccessModal(true);
           }}>
           <View className="min-h-[300px] rounded-2xl bg-white px-7 py-9">
             <Text className="mb-2 font-JakartaExtraBold text-2xl">Verificação</Text>
@@ -424,23 +672,20 @@ const DoctorSignUp = () => {
           </View>
         </ReactNativeModal>
 
-        <ReactNativeModal isVisible={showSuccessModel}>
+        <ReactNativeModal isVisible={showSuccessModal}>
           <View className="min-h-[300px] rounded-2xl bg-white px-7 py-9">
             <Image source={images.check} className="mx-auto my-5 h-[110px] w-[110px]" />
 
-            <Text className="text-center font-JakartaExtraBold text-3xl">Verificado</Text>
+            <Text className="text-center font-JakartaExtraBold text-3xl">Cadastro Enviado</Text>
 
             <Text className="mt-2 text-center font-Jakarta text-base text-gray-400">
-              Sua conta médica foi verificada com sucesso.
+              Seu cadastro foi enviado com sucesso e está em análise pela nossa equipe. Você
+              receberá um email quando sua conta for aprovada.
             </Text>
 
             <CustomButton
-              title="Ir para o Dashboard"
-              onPress={() =>
-                router.replace({
-                  pathname: '/(doctor)/(tabs)/dashboard',
-                } as any)
-              }
+              title="Ir para Página de Login"
+              onPress={() => router.replace('/(auth)/sign-in')}
               className="mt-5"
             />
           </View>
