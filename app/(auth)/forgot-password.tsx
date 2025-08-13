@@ -1,3 +1,8 @@
+import { useSignIn } from '@clerk/clerk-expo';
+import CustomButton from 'components/CustomButton';
+import InputField from 'components/InputField';
+import { Link, router } from 'expo-router';
+import React, { useState } from 'react';
 import {
   Text,
   View,
@@ -7,13 +12,9 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
-import React, { useState } from 'react';
-import { icons, images } from '../../constants';
-import InputField from 'components/InputField';
-import CustomButton from 'components/CustomButton';
-import { Link, router } from 'expo-router';
-import { useSignIn } from '@clerk/clerk-expo';
 import ReactNativeModal from 'react-native-modal';
+
+import { icons, images } from '../../constants';
 
 const ForgotPassword = () => {
   const { isLoaded, signIn } = useSignIn();

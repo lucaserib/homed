@@ -1,3 +1,7 @@
+import { useUser, useAuth } from '@clerk/clerk-expo';
+import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
+import { useFetch, fetchAPI } from 'lib/fetch';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -10,12 +14,8 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useUser, useAuth } from '@clerk/clerk-expo';
-import { useFetch } from 'lib/fetch';
-import { fetchAPI } from 'lib/fetch';
-import { router } from 'expo-router';
+
 import { icons } from '../../../constants';
-import * as ImagePicker from 'expo-image-picker';
 import { Doctor } from '../../../types/consultation';
 
 // Componente para os campos editáveis do perfil

@@ -1,9 +1,10 @@
-import { Text, TouchableOpacity, SafeAreaView, View, Image } from 'react-native';
-import React, { useRef, useState } from 'react';
-import { Link, router } from 'expo-router';
-import Swiper from 'react-native-swiper';
-import { onboarding } from '../../constants';
 import CustomButton from 'components/CustomButton';
+import { Link, router } from 'expo-router';
+import React, { useRef, useState } from 'react';
+import { Text, TouchableOpacity, SafeAreaView, View, Image } from 'react-native';
+import Swiper from 'react-native-swiper';
+
+import { onboarding } from '../../constants';
 
 const Onboarding = () => {
   const swiperRef = useRef<Swiper>(null);

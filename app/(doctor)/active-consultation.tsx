@@ -1,3 +1,5 @@
+import { useUser } from '@clerk/clerk-expo';
+import { useLocalSearchParams, router } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,21 +11,11 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useUser } from '@clerk/clerk-expo';
-import { fetchAPI } from '../../lib/fetch';
-import { useLocalSearchParams, router } from 'expo-router';
-import { icons } from '../../constants';
 import ReactNativeModal from 'react-native-modal';
-import * as NativeWind from 'nativewind';
+
+import { icons } from '../../constants';
+import { fetchAPI } from '../../lib/fetch';
 import type { ConsultationDetails } from '../../types/consultation';
-
-const styled = NativeWind.styled;
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledScrollView = styled(ScrollView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledImage = styled(Image);
 
 interface ConsultationTimerProps {
   startTime: string;
@@ -73,36 +65,34 @@ const ConsultationTimer: React.FC<ConsultationTimerProps> = ({
   };
 
   return (
-    <StyledView className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-      <StyledText className="mb-2 text-center font-JakartaBold text-xl">
-        Tempo de Consulta
-      </StyledText>
+    <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+      <Text className="mb-2 text-center font-JakartaBold text-xl">Tempo de Consulta</Text>
 
-      <StyledText className="mb-3 text-center font-JakartaSemiBold text-3xl">
+      <Text className="mb-3 text-center font-JakartaSemiBold text-3xl">
         {formatTime(elapsedTime)}
-      </StyledText>
+      </Text>
 
-      <StyledText className="mb-5 text-center font-JakartaMedium">
+      <Text className="mb-5 text-center font-JakartaMedium">
         Valor estimado: R$ {estimatedCost.toFixed(2)}
-      </StyledText>
+      </Text>
 
-      <StyledView className="flex-row justify-between">
-        <StyledTouchableOpacity
+      <View className="flex-row justify-between">
+        <TouchableOpacity
           onPress={togglePause}
           className={`mr-2 flex-1 rounded-full px-5 py-3 ${isPaused ? 'bg-primary-500' : 'bg-gray-300'}`}>
-          <StyledText
+          <Text
             className={`text-center font-JakartaBold ${isPaused ? 'text-white' : 'text-gray-700'}`}>
             {isPaused ? 'Continuar' : 'Pausar'}
-          </StyledText>
-        </StyledTouchableOpacity>
+          </Text>
+        </TouchableOpacity>
 
-        <StyledTouchableOpacity
+        <TouchableOpacity
           onPress={onFinish}
           className="flex-1 rounded-full bg-success-500 px-5 py-3">
-          <StyledText className="text-center font-JakartaBold text-white">Finalizar</StyledText>
-        </StyledTouchableOpacity>
-      </StyledView>
-    </StyledView>
+          <Text className="text-center font-JakartaBold text-white">Finalizar</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
@@ -204,35 +194,35 @@ const ActiveConsultation: React.FC = () => {
 
   if (loading) {
     return (
-      <StyledView className="flex-1 items-center justify-center bg-general-500">
+      <View className="flex-1 items-center justify-center bg-general-500">
         <ActivityIndicator size="large" color="#0286FF" />
-      </StyledView>
+      </View>
     );
   }
 
   if (!consultation) {
     return (
-      <StyledView className="flex-1 items-center justify-center bg-general-500 p-5">
-        <StyledText className="mb-4 text-center font-JakartaSemiBold text-lg">
+      <View className="flex-1 items-center justify-center bg-general-500 p-5">
+        <Text className="mb-4 text-center font-JakartaSemiBold text-lg">
           Consulta não encontrada ou não disponível
-        </StyledText>
-        <StyledTouchableOpacity
+        </Text>
+        <TouchableOpacity
           onPress={() => router.back()}
           className="rounded-full bg-primary-500 px-5 py-3">
-          <StyledText className="font-JakartaBold text-white">Voltar</StyledText>
-        </StyledTouchableOpacity>
-      </StyledView>
+          <Text className="font-JakartaBold text-white">Voltar</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
   return (
-    <StyledScrollView className="flex-1 bg-general-500 p-5">
-      <StyledView className="mb-5 flex-row items-center">
-        <StyledTouchableOpacity onPress={() => router.back()} className="mr-3">
-          <StyledImage source={icons.backArrow} className="h-6 w-6" />
-        </StyledTouchableOpacity>
-        <StyledText className="font-JakartaBold text-2xl">Consulta em Andamento</StyledText>
-      </StyledView>
+    <ScrollView className="flex-1 bg-general-500 p-5">
+      <View className="mb-5 flex-row items-center">
+        <TouchableOpacity onPress={() => router.back()} className="mr-3">
+          <Image source={icons.backArrow} className="h-6 w-6" />
+        </TouchableOpacity>
+        <Text className="font-JakartaBold text-2xl">Consulta em Andamento</Text>
+      </View>
 
       {consultation.startTime && (
         <ConsultationTimer
@@ -242,22 +232,20 @@ const ActiveConsultation: React.FC = () => {
         />
       )}
 
-      <StyledView className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-        <StyledText className="mb-3 font-JakartaBold text-xl">Informações do Paciente</StyledText>
+      <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+        <Text className="mb-3 font-JakartaBold text-xl">Informações do Paciente</Text>
 
-        <StyledView className="mb-2">
-          <StyledText className="font-JakartaMedium text-gray-500">Nome</StyledText>
-          <StyledText className="font-JakartaSemiBold text-lg">
-            {consultation.patient.name}
-          </StyledText>
-        </StyledView>
+        <View className="mb-2">
+          <Text className="font-JakartaMedium text-gray-500">Nome</Text>
+          <Text className="font-JakartaSemiBold text-lg">{consultation.patient.name}</Text>
+        </View>
 
-        <StyledView className="mb-2">
-          <StyledText className="font-JakartaMedium text-gray-500">Endereço</StyledText>
-          <StyledText className="font-Jakarta">{consultation.originAddress}</StyledText>
-        </StyledView>
+        <View className="mb-2">
+          <Text className="font-JakartaMedium text-gray-500">Endereço</Text>
+          <Text className="font-Jakarta">{consultation.originAddress}</Text>
+        </View>
 
-        <StyledTouchableOpacity
+        <TouchableOpacity
           onPress={() =>
             router.navigate({
               pathname: '/(doctor)/(tabs)/chat',
@@ -265,21 +253,21 @@ const ActiveConsultation: React.FC = () => {
             } as any)
           }
           className="mt-2 flex-row items-center justify-center rounded-full bg-primary-500 px-5 py-3">
-          <StyledImage source={icons.chat} className="mr-2 h-5 w-5" tintColor="white" />
-          <StyledText className="font-JakartaBold text-white">Chat com Paciente</StyledText>
-        </StyledTouchableOpacity>
-      </StyledView>
+          <Image source={icons.chat} className="mr-2 h-5 w-5" tintColor="white" />
+          <Text className="font-JakartaBold text-white">Chat com Paciente</Text>
+        </TouchableOpacity>
+      </View>
 
-      <StyledView className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-        <StyledText className="mb-3 font-JakartaBold text-xl">Queixa do Paciente</StyledText>
-        <StyledText className="font-Jakarta">{consultation.complaint}</StyledText>
-      </StyledView>
+      <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+        <Text className="mb-3 font-JakartaBold text-xl">Queixa do Paciente</Text>
+        <Text className="font-Jakarta">{consultation.complaint}</Text>
+      </View>
 
-      <StyledView className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-        <StyledText className="mb-3 font-JakartaBold text-xl">Prontuário</StyledText>
+      <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+        <Text className="mb-3 font-JakartaBold text-xl">Prontuário</Text>
 
-        <StyledView className="mb-4">
-          <StyledText className="mb-2 font-JakartaSemiBold">Diagnóstico</StyledText>
+        <View className="mb-4">
+          <Text className="mb-2 font-JakartaSemiBold">Diagnóstico</Text>
           <TextInput
             className="rounded-lg bg-gray-100 p-3 font-Jakarta"
             placeholder="Digite o diagnóstico"
@@ -288,10 +276,10 @@ const ActiveConsultation: React.FC = () => {
             multiline
             numberOfLines={3}
           />
-        </StyledView>
+        </View>
 
-        <StyledView className="mb-4">
-          <StyledText className="mb-2 font-JakartaSemiBold">Tratamento</StyledText>
+        <View className="mb-4">
+          <Text className="mb-2 font-JakartaSemiBold">Tratamento</Text>
           <TextInput
             className="rounded-lg bg-gray-100 p-3 font-Jakarta"
             placeholder="Digite o tratamento recomendado"
@@ -300,10 +288,10 @@ const ActiveConsultation: React.FC = () => {
             multiline
             numberOfLines={3}
           />
-        </StyledView>
+        </View>
 
-        <StyledView className="mb-4">
-          <StyledText className="mb-2 font-JakartaSemiBold">Observações Adicionais</StyledText>
+        <View className="mb-4">
+          <Text className="mb-2 font-JakartaSemiBold">Observações Adicionais</Text>
           <TextInput
             className="rounded-lg bg-gray-100 p-3 font-Jakarta"
             placeholder="Digite observações adicionais (opcional)"
@@ -312,53 +300,45 @@ const ActiveConsultation: React.FC = () => {
             multiline
             numberOfLines={4}
           />
-        </StyledView>
-      </StyledView>
+        </View>
+      </View>
 
-      <StyledView className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-        <StyledText className="mb-3 font-JakartaBold text-xl">Ações</StyledText>
+      <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+        <Text className="mb-3 font-JakartaBold text-xl">Ações</Text>
 
         {consultation.status === 'in_progress' && (
-          <StyledTouchableOpacity
-            onPress={handleFinishPress}
-            className="rounded-xl bg-success-500 p-3">
-            <StyledText className="text-center font-JakartaBold text-white">
-              Finalizar Consulta
-            </StyledText>
-          </StyledTouchableOpacity>
+          <TouchableOpacity onPress={handleFinishPress} className="rounded-xl bg-success-500 p-3">
+            <Text className="text-center font-JakartaBold text-white">Finalizar Consulta</Text>
+          </TouchableOpacity>
         )}
-      </StyledView>
+      </View>
 
       <ReactNativeModal
         isVisible={showFinishModal}
         onBackdropPress={() => setShowFinishModal(false)}>
-        <StyledView className="rounded-xl bg-white p-5">
-          <StyledText className="mb-3 text-center font-JakartaBold text-xl">
-            Finalizar Consulta
-          </StyledText>
-          <StyledText className="mb-5 text-center">
+        <View className="rounded-xl bg-white p-5">
+          <Text className="mb-3 text-center font-JakartaBold text-xl">Finalizar Consulta</Text>
+          <Text className="mb-5 text-center">
             Você tem certeza que deseja finalizar esta consulta? O paciente será cobrado pelo tempo
             de atendimento.
-          </StyledText>
+          </Text>
 
-          <StyledView className="flex-row">
-            <StyledTouchableOpacity
+          <View className="flex-row">
+            <TouchableOpacity
               onPress={() => setShowFinishModal(false)}
               className="mr-2 flex-1 rounded-full bg-gray-200 px-5 py-3">
-              <StyledText className="text-center font-JakartaSemiBold">Cancelar</StyledText>
-            </StyledTouchableOpacity>
+              <Text className="text-center font-JakartaSemiBold">Cancelar</Text>
+            </TouchableOpacity>
 
-            <StyledTouchableOpacity
+            <TouchableOpacity
               onPress={confirmFinish}
               className="flex-1 rounded-full bg-success-500 px-5 py-3">
-              <StyledText className="text-center font-JakartaSemiBold text-white">
-                Confirmar
-              </StyledText>
-            </StyledTouchableOpacity>
-          </StyledView>
-        </StyledView>
+              <Text className="text-center font-JakartaSemiBold text-white">Confirmar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </ReactNativeModal>
-    </StyledScrollView>
+    </ScrollView>
   );
 };
 

@@ -1,3 +1,5 @@
+import { useUser } from '@clerk/clerk-expo';
+import { useLocalSearchParams, router } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,21 +11,10 @@ import {
   SafeAreaView,
   Alert,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
-import { useUser } from '@clerk/clerk-expo';
-import { fetchAPI } from '../../../lib/fetch';
+
 import { icons } from '../../../constants';
-import * as NativeWind from 'nativewind';
+import { fetchAPI } from '../../../lib/fetch';
 import type { ConsultationDetails } from '../../../types/consultation';
-
-const styled = NativeWind.styled;
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledScrollView = styled(ScrollView);
-const StyledSafeAreaView = styled(SafeAreaView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledImage = styled(Image);
 
 const ConsultationDetailsScreen = () => {
   const params = useLocalSearchParams<{ id: string }>();
@@ -145,50 +136,50 @@ const ConsultationDetailsScreen = () => {
 
   if (loading) {
     return (
-      <StyledSafeAreaView className="flex-1 items-center justify-center bg-general-500">
+      <SafeAreaView className="flex-1 items-center justify-center bg-general-500">
         <ActivityIndicator size="large" color="#0286FF" />
-      </StyledSafeAreaView>
+      </SafeAreaView>
     );
   }
 
   if (!consultation) {
     return (
-      <StyledSafeAreaView className="flex-1 bg-general-500 p-5">
-        <StyledView className="mb-5 flex-row items-center">
-          <StyledTouchableOpacity onPress={() => router.back()} className="mr-3">
-            <StyledImage source={icons.backArrow} className="h-6 w-6" />
-          </StyledTouchableOpacity>
-          <StyledText className="font-JakartaBold text-2xl">Detalhes da Consulta</StyledText>
-        </StyledView>
+      <SafeAreaView className="flex-1 bg-general-500 p-5">
+        <View className="mb-5 flex-row items-center">
+          <TouchableOpacity onPress={() => router.back()} className="mr-3">
+            <Image source={icons.backArrow} className="h-6 w-6" />
+          </TouchableOpacity>
+          <Text className="font-JakartaBold text-2xl">Detalhes da Consulta</Text>
+        </View>
 
-        <StyledView className="flex-1 items-center justify-center">
-          <StyledText className="mb-3 text-center font-JakartaSemiBold text-lg">
+        <View className="flex-1 items-center justify-center">
+          <Text className="mb-3 text-center font-JakartaSemiBold text-lg">
             Consulta não encontrada
-          </StyledText>
-          <StyledTouchableOpacity
+          </Text>
+          <TouchableOpacity
             onPress={() => router.back()}
             className="rounded-full bg-primary-500 px-5 py-3">
-            <StyledText className="text-center font-JakartaBold text-white">Voltar</StyledText>
-          </StyledTouchableOpacity>
-        </StyledView>
-      </StyledSafeAreaView>
+            <Text className="text-center font-JakartaBold text-white">Voltar</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <StyledSafeAreaView className="flex-1 bg-general-500">
-      <StyledScrollView className="p-5">
-        <StyledView className="mb-5 flex-row items-center">
-          <StyledTouchableOpacity onPress={() => router.back()} className="mr-3">
-            <StyledImage source={icons.backArrow} className="h-6 w-6" />
-          </StyledTouchableOpacity>
-          <StyledText className="font-JakartaBold text-2xl">Detalhes da Consulta</StyledText>
-        </StyledView>
+    <SafeAreaView className="flex-1 bg-general-500">
+      <ScrollView className="p-5">
+        <View className="mb-5 flex-row items-center">
+          <TouchableOpacity onPress={() => router.back()} className="mr-3">
+            <Image source={icons.backArrow} className="h-6 w-6" />
+          </TouchableOpacity>
+          <Text className="font-JakartaBold text-2xl">Detalhes da Consulta</Text>
+        </View>
 
         {/* Status da Consulta */}
-        <StyledView className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-          <StyledText className="mb-2 font-JakartaSemiBold text-xl">Status</StyledText>
-          <StyledView
+        <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+          <Text className="mb-2 font-JakartaSemiBold text-xl">Status</Text>
+          <View
             className={`rounded-full px-4 py-2 ${
               consultation.status === 'pending'
                 ? 'bg-yellow-100'
@@ -201,7 +192,7 @@ const ConsultationDetailsScreen = () => {
                       : 'bg-red-100'
             }`}
             style={{ alignSelf: 'flex-start' }}>
-            <StyledText
+            <Text
               className={`font-JakartaSemiBold ${
                 consultation.status === 'pending'
                   ? 'text-yellow-800'
@@ -214,121 +205,105 @@ const ConsultationDetailsScreen = () => {
                         : 'text-red-800'
               }`}>
               {getStatusText()}
-            </StyledText>
-          </StyledView>
-        </StyledView>
+            </Text>
+          </View>
+        </View>
 
         {/* Informações do Paciente */}
-        <StyledView className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-          <StyledText className="mb-3 font-JakartaSemiBold text-xl">
-            Informações do Paciente
-          </StyledText>
+        <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+          <Text className="mb-3 font-JakartaSemiBold text-xl">Informações do Paciente</Text>
 
-          <StyledView className="mb-2">
-            <StyledText className="font-JakartaMedium text-gray-500">Nome</StyledText>
-            <StyledText className="font-JakartaSemiBold text-lg">
-              {consultation.patient.name}
-            </StyledText>
-          </StyledView>
+          <View className="mb-2">
+            <Text className="font-JakartaMedium text-gray-500">Nome</Text>
+            <Text className="font-JakartaSemiBold text-lg">{consultation.patient.name}</Text>
+          </View>
 
-          <StyledView className="mb-2">
-            <StyledText className="font-JakartaMedium text-gray-500">Local</StyledText>
-            <StyledText className="font-JakartaSemiBold">{consultation.originAddress}</StyledText>
-          </StyledView>
+          <View className="mb-2">
+            <Text className="font-JakartaMedium text-gray-500">Local</Text>
+            <Text className="font-JakartaSemiBold">{consultation.originAddress}</Text>
+          </View>
 
           {consultation.status === 'in_progress' && (
-            <StyledTouchableOpacity
+            <TouchableOpacity
               onPress={handleOpenChat}
               className="mt-2 flex-row items-center justify-center rounded-full bg-primary-500 px-5 py-3">
-              <StyledImage source={icons.chat} className="mr-2 h-5 w-5" tintColor="white" />
-              <StyledText className="font-JakartaBold text-white">Chat com Paciente</StyledText>
-            </StyledTouchableOpacity>
+              <Image source={icons.chat} className="mr-2 h-5 w-5" tintColor="white" />
+              <Text className="font-JakartaBold text-white">Chat com Paciente</Text>
+            </TouchableOpacity>
           )}
-        </StyledView>
+        </View>
 
         {/* Detalhes da Consulta */}
-        <StyledView className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-          <StyledText className="mb-3 font-JakartaSemiBold text-xl">
-            Detalhes da Consulta
-          </StyledText>
+        <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+          <Text className="mb-3 font-JakartaSemiBold text-xl">Detalhes da Consulta</Text>
 
-          <StyledView className="mb-2">
-            <StyledText className="font-JakartaMedium text-gray-500">Queixa do Paciente</StyledText>
-            <StyledText className="font-JakartaSemiBold">{consultation.complaint}</StyledText>
-          </StyledView>
+          <View className="mb-2">
+            <Text className="font-JakartaMedium text-gray-500">Queixa do Paciente</Text>
+            <Text className="font-JakartaSemiBold">{consultation.complaint}</Text>
+          </View>
 
-          <StyledView className="mb-2">
-            <StyledText className="font-JakartaMedium text-gray-500">Data Agendada</StyledText>
-            <StyledText className="font-JakartaSemiBold">
-              {formatDate(consultation.scheduledTime)}
-            </StyledText>
-          </StyledView>
+          <View className="mb-2">
+            <Text className="font-JakartaMedium text-gray-500">Data Agendada</Text>
+            <Text className="font-JakartaSemiBold">{formatDate(consultation.scheduledTime)}</Text>
+          </View>
 
           {consultation.startTime && (
-            <StyledView className="mb-2">
-              <StyledText className="font-JakartaMedium text-gray-500">Início</StyledText>
-              <StyledText className="font-JakartaSemiBold">
-                {formatDate(consultation.startTime)}
-              </StyledText>
-            </StyledView>
+            <View className="mb-2">
+              <Text className="font-JakartaMedium text-gray-500">Início</Text>
+              <Text className="font-JakartaSemiBold">{formatDate(consultation.startTime)}</Text>
+            </View>
           )}
 
           {consultation.endTime && (
-            <StyledView className="mb-2">
-              <StyledText className="font-JakartaMedium text-gray-500">Fim</StyledText>
-              <StyledText className="font-JakartaSemiBold">
-                {formatDate(consultation.endTime)}
-              </StyledText>
-            </StyledView>
+            <View className="mb-2">
+              <Text className="font-JakartaMedium text-gray-500">Fim</Text>
+              <Text className="font-JakartaSemiBold">{formatDate(consultation.endTime)}</Text>
+            </View>
           )}
 
           {consultation.status === 'completed' && (
-            <StyledTouchableOpacity
+            <TouchableOpacity
               onPress={handleViewMedicalRecord}
               className="mt-3 flex-row items-center justify-center rounded-full bg-primary-500 px-5 py-3">
-              <StyledText className="font-JakartaBold text-white">Ver Prontuário</StyledText>
-            </StyledTouchableOpacity>
+              <Text className="font-JakartaBold text-white">Ver Prontuário</Text>
+            </TouchableOpacity>
           )}
-        </StyledView>
+        </View>
 
         {/* Ações */}
         {consultation.status === 'pending' && (
-          <StyledView className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-            <StyledText className="mb-3 font-JakartaSemiBold text-xl">Ações</StyledText>
+          <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+            <Text className="mb-3 font-JakartaSemiBold text-xl">Ações</Text>
 
-            <StyledView className="flex-row">
-              <StyledTouchableOpacity
+            <View className="flex-row">
+              <TouchableOpacity
                 onPress={handleAccept}
                 className="mr-2 flex-1 rounded-full bg-primary-500 px-5 py-3">
-                <StyledText className="text-center font-JakartaBold text-white">Aceitar</StyledText>
-              </StyledTouchableOpacity>
+                <Text className="text-center font-JakartaBold text-white">Aceitar</Text>
+              </TouchableOpacity>
 
-              <StyledTouchableOpacity
+              <TouchableOpacity
                 onPress={handleDecline}
                 className="flex-1 rounded-full bg-general-700 px-5 py-3">
-                <StyledText className="text-center font-JakartaBold text-gray-700">
-                  Recusar
-                </StyledText>
-              </StyledTouchableOpacity>
-            </StyledView>
-          </StyledView>
+                <Text className="text-center font-JakartaBold text-gray-700">Recusar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
 
         {consultation.status === 'accepted' && (
-          <StyledView className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-            <StyledText className="mb-3 font-JakartaSemiBold text-xl">Ações</StyledText>
+          <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+            <Text className="mb-3 font-JakartaSemiBold text-xl">Ações</Text>
 
-            <StyledTouchableOpacity
+            <TouchableOpacity
               onPress={handleStartConsultation}
               className="rounded-full bg-success-500 px-5 py-3">
-              <StyledText className="text-center font-JakartaBold text-white">
-                Iniciar Atendimento
-              </StyledText>
-            </StyledTouchableOpacity>
-          </StyledView>
+              <Text className="text-center font-JakartaBold text-white">Iniciar Atendimento</Text>
+            </TouchableOpacity>
+          </View>
         )}
-      </StyledScrollView>
-    </StyledSafeAreaView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

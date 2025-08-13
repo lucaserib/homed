@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       JSON.stringify({
         success: true,
         message: 'Payment successful',
-        result: result,
+        result,
       })
     );
   } catch (error) {

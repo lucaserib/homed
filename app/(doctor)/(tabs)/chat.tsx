@@ -1,3 +1,5 @@
+import { useUser } from '@clerk/clerk-expo';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -11,23 +13,10 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { useUser } from '@clerk/clerk-expo';
-import { fetchAPI } from '../../../lib/fetch';
+
 import { icons } from '../../../constants';
-import * as NativeWind from 'nativewind';
+import { fetchAPI } from '../../../lib/fetch';
 import type { ChatRoom, Message } from '../../../types/consultation';
-
-const styled = NativeWind.styled;
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledSafeAreaView = styled(SafeAreaView);
-const StyledScrollView = styled(ScrollView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledImage = styled(Image);
-const StyledTextInput = styled(TextInput);
-const StyledKeyboardAvoidingView = styled(KeyboardAvoidingView);
 
 // Função para formatação de datas
 const formatDate = (dateString: string) => {
@@ -57,42 +46,42 @@ const ChatRoomItem: React.FC<{
   const patientParticipant = chatRoom.participants?.[0] || { name: 'Paciente', id: 'unknown' };
 
   return (
-    <StyledTouchableOpacity
+    <TouchableOpacity
       onPress={onSelect}
       className={`mb-2 flex-row items-center rounded-xl p-3 ${
         isActive ? 'bg-primary-100' : 'bg-white'
       }`}>
-      <StyledView className="h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gray-200">
+      <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gray-200">
         {patientParticipant.image ? (
-          <StyledImage source={{ uri: patientParticipant.image }} className="h-full w-full" />
+          <Image source={{ uri: patientParticipant.image }} className="h-full w-full" />
         ) : (
-          <StyledText className="font-JakartaExtraBold text-xl text-gray-400">
+          <Text className="font-JakartaExtraBold text-xl text-gray-400">
             {patientParticipant.name.charAt(0).toUpperCase()}
-          </StyledText>
+          </Text>
         )}
-      </StyledView>
+      </View>
 
-      <StyledView className="ml-3 flex-1">
-        <StyledView className="flex-row items-center justify-between">
-          <StyledText className="font-JakartaSemiBold">{patientParticipant.name}</StyledText>
-          <StyledText className="text-xs text-gray-500">
+      <View className="ml-3 flex-1">
+        <View className="flex-row items-center justify-between">
+          <Text className="font-JakartaSemiBold">{patientParticipant.name}</Text>
+          <Text className="text-xs text-gray-500">
             {chatRoom.lastMessageTime ? formatDate(chatRoom.lastMessageTime) : ''}
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
 
-        <StyledText
+        <Text
           numberOfLines={1}
           className={`text-sm ${chatRoom.unreadCount > 0 ? 'font-JakartaSemiBold' : 'text-gray-500'}`}>
           {chatRoom.lastMessage || 'Nenhuma mensagem'}
-        </StyledText>
-      </StyledView>
+        </Text>
+      </View>
 
       {chatRoom.unreadCount > 0 && (
-        <StyledView className="ml-2 h-6 w-6 items-center justify-center rounded-full bg-primary-500">
-          <StyledText className="text-xs font-bold text-white">{chatRoom.unreadCount}</StyledText>
-        </StyledView>
+        <View className="ml-2 h-6 w-6 items-center justify-center rounded-full bg-primary-500">
+          <Text className="text-xs font-bold text-white">{chatRoom.unreadCount}</Text>
+        </View>
       )}
-    </StyledTouchableOpacity>
+    </TouchableOpacity>
   );
 };
 
@@ -102,22 +91,22 @@ const ChatMessage: React.FC<{
   isCurrentUser: boolean;
 }> = ({ message, isCurrentUser }) => {
   return (
-    <StyledView
+    <View
       className={`mb-3 max-w-[80%] rounded-2xl p-3 ${
         isCurrentUser
           ? 'self-end rounded-tr-none bg-primary-500'
           : 'self-start rounded-tl-none bg-gray-200'
       }`}>
-      <StyledText className={`font-Jakarta ${isCurrentUser ? 'text-white' : 'text-gray-800'}`}>
+      <Text className={`font-Jakarta ${isCurrentUser ? 'text-white' : 'text-gray-800'}`}>
         {message.content}
-      </StyledText>
-      <StyledText
+      </Text>
+      <Text
         className={`mt-1 text-right text-xs ${
           isCurrentUser ? 'text-primary-100' : 'text-gray-500'
         }`}>
         {formatDate(message.timestamp)}
-      </StyledText>
-    </StyledView>
+      </Text>
+    </View>
   );
 };
 
@@ -130,24 +119,24 @@ const ChatList: React.FC<{
 }> = ({ chatRooms, activeChatId, onSelectChat, loading }) => {
   if (loading) {
     return (
-      <StyledView className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#0286FF" />
-      </StyledView>
+      </View>
     );
   }
 
   if (chatRooms.length === 0) {
     return (
-      <StyledView className="flex-1 items-center justify-center p-5">
-        <StyledText className="text-center font-JakartaSemiBold text-gray-500">
+      <View className="flex-1 items-center justify-center p-5">
+        <Text className="text-center font-JakartaSemiBold text-gray-500">
           Você não tem conversas ainda.
-        </StyledText>
-      </StyledView>
+        </Text>
+      </View>
     );
   }
 
   return (
-    <StyledScrollView className="flex-1">
+    <ScrollView className="flex-1">
       {chatRooms.map((chatRoom) => (
         <ChatRoomItem
           key={chatRoom.id}
@@ -156,7 +145,7 @@ const ChatList: React.FC<{
           onSelect={() => onSelectChat(chatRoom.id)}
         />
       ))}
-    </StyledScrollView>
+    </ScrollView>
   );
 };
 
@@ -193,19 +182,19 @@ const ActiveChatArea: React.FC<{
 
   if (!activeChat) {
     return (
-      <StyledView className="flex-1 items-center justify-center bg-general-100">
-        <StyledText className="text-center font-JakartaSemiBold text-gray-500">
+      <View className="flex-1 items-center justify-center bg-general-100">
+        <Text className="text-center font-JakartaSemiBold text-gray-500">
           Selecione uma conversa para começar o chat
-        </StyledText>
-      </StyledView>
+        </Text>
+      </View>
     );
   }
 
   if (loading) {
     return (
-      <StyledView className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#0286FF" />
-      </StyledView>
+      </View>
     );
   }
 
@@ -213,41 +202,39 @@ const ActiveChatArea: React.FC<{
   const patientParticipant = activeChat.participants?.[0] || { name: 'Paciente', id: 'unknown' };
 
   return (
-    <StyledKeyboardAvoidingView
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-general-100">
       {/* Header */}
-      <StyledView className="flex-row items-center border-b border-gray-200 bg-white p-3">
-        <StyledTouchableOpacity onPress={onBack} className="mr-2">
-          <StyledImage source={icons.backArrow} className="h-6 w-6" />
-        </StyledTouchableOpacity>
+      <View className="flex-row items-center border-b border-gray-200 bg-white p-3">
+        <TouchableOpacity onPress={onBack} className="mr-2">
+          <Image source={icons.backArrow} className="h-6 w-6" />
+        </TouchableOpacity>
 
-        <StyledView className="h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gray-200">
+        <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gray-200">
           {patientParticipant.image ? (
-            <StyledImage source={{ uri: patientParticipant.image }} className="h-full w-full" />
+            <Image source={{ uri: patientParticipant.image }} className="h-full w-full" />
           ) : (
-            <StyledText className="font-JakartaExtraBold text-lg text-gray-400">
+            <Text className="font-JakartaExtraBold text-lg text-gray-400">
               {patientParticipant.name.charAt(0).toUpperCase()}
-            </StyledText>
+            </Text>
           )}
-        </StyledView>
-        <StyledText className="ml-3 font-JakartaSemiBold text-lg">
-          {patientParticipant.name}
-        </StyledText>
-      </StyledView>
+        </View>
+        <Text className="ml-3 font-JakartaSemiBold text-lg">{patientParticipant.name}</Text>
+      </View>
 
       {/* Chat Messages */}
-      <StyledScrollView
+      <ScrollView
         ref={scrollViewRef}
         className="flex-1 p-4"
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled">
         {messages.length === 0 ? (
-          <StyledView className="flex-1 items-center justify-center">
-            <StyledText className="text-center font-JakartaSemiBold text-gray-500">
+          <View className="flex-1 items-center justify-center">
+            <Text className="text-center font-JakartaSemiBold text-gray-500">
               Nenhuma mensagem ainda. Comece a conversa!
-            </StyledText>
-          </StyledView>
+            </Text>
+          </View>
         ) : (
           messages.map((message) => (
             <ChatMessage
@@ -257,27 +244,27 @@ const ActiveChatArea: React.FC<{
             />
           ))
         )}
-      </StyledScrollView>
+      </ScrollView>
 
       {/* Input Area */}
-      <StyledView className="flex-row items-center border-t border-gray-200 bg-white p-2">
-        <StyledTextInput
+      <View className="flex-row items-center border-t border-gray-200 bg-white p-2">
+        <TextInput
           className="mr-2 flex-1 rounded-full bg-gray-100 px-4 py-2 font-Jakarta"
           placeholder="Digite sua mensagem..."
           value={newMessage}
           onChangeText={setNewMessage}
           multiline
         />
-        <StyledTouchableOpacity
+        <TouchableOpacity
           onPress={handleSendMessage}
           disabled={!newMessage.trim()}
           className={`h-10 w-10 items-center justify-center rounded-full ${
             newMessage.trim() ? 'bg-primary-500' : 'bg-gray-300'
           }`}>
-          <StyledImage source={icons.send} className="h-5 w-5" tintColor="white" />
-        </StyledTouchableOpacity>
-      </StyledView>
-    </StyledKeyboardAvoidingView>
+          <Image source={icons.send} className="h-5 w-5" tintColor="white" />
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -397,21 +384,21 @@ const ChatScreen: React.FC = () => {
   };
 
   return (
-    <StyledSafeAreaView className="flex-1 bg-general-500">
+    <SafeAreaView className="flex-1 bg-general-500">
       {isChatOpen && Platform.OS === 'web' ? (
-        <StyledView className="flex-1 flex-row">
-          <StyledView className="w-1/3 border-r border-gray-200">
-            <StyledView className="border-b border-gray-200 p-4">
-              <StyledText className="font-JakartaBold text-xl">Mensagens</StyledText>
-            </StyledView>
+        <View className="flex-1 flex-row">
+          <View className="w-1/3 border-r border-gray-200">
+            <View className="border-b border-gray-200 p-4">
+              <Text className="font-JakartaBold text-xl">Mensagens</Text>
+            </View>
             <ChatList
               chatRooms={chatRoomsData}
               activeChatId={activeChatId}
               onSelectChat={handleSelectChat}
               loading={loading}
             />
-          </StyledView>
-          <StyledView className="flex-1">
+          </View>
+          <View className="flex-1">
             <ActiveChatArea
               activeChat={activeChat}
               messages={messages}
@@ -422,8 +409,8 @@ const ChatScreen: React.FC = () => {
               currentUserId={user?.id || ''}
               onBack={handleBackToList}
             />
-          </StyledView>
-        </StyledView>
+          </View>
+        </View>
       ) : isChatOpen ? (
         <ActiveChatArea
           activeChat={activeChat}
@@ -436,19 +423,19 @@ const ChatScreen: React.FC = () => {
           onBack={handleBackToList}
         />
       ) : (
-        <StyledView className="flex-1">
-          <StyledView className="border-b border-gray-200 bg-white p-4">
-            <StyledText className="font-JakartaBold text-xl">Mensagens</StyledText>
-          </StyledView>
+        <View className="flex-1">
+          <View className="border-b border-gray-200 bg-white p-4">
+            <Text className="font-JakartaBold text-xl">Mensagens</Text>
+          </View>
           <ChatList
             chatRooms={chatRoomsData}
             activeChatId={activeChatId}
             onSelectChat={handleSelectChat}
             loading={loading}
           />
-        </StyledView>
+        </View>
       )}
-    </StyledSafeAreaView>
+    </SafeAreaView>
   );
 };
 

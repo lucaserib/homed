@@ -1,4 +1,6 @@
 // app/(doctor)/(tabs)/consultations.tsx
+import { useUser } from '@clerk/clerk-expo';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
   SafeAreaView,
@@ -10,20 +12,9 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import { useFetch, fetchAPI } from '../../../lib/fetch';
-import { useUser } from '@clerk/clerk-expo';
-import { router } from 'expo-router';
-import { icons, images } from '../../../constants';
-import * as NativeWind from 'nativewind';
 
-// Componentes estilizados para uso com className
-const styled = NativeWind.styled;
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledSafeAreaView = styled(SafeAreaView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledScrollView = styled(ScrollView);
-const StyledImage = styled(Image);
+import { icons, images } from '../../../constants';
+import { useFetch, fetchAPI } from '../../../lib/fetch';
 
 interface TabButtonProps {
   title: string;
@@ -32,13 +23,11 @@ interface TabButtonProps {
 }
 
 const TabButton: React.FC<TabButtonProps> = ({ title, active, onPress }) => (
-  <StyledTouchableOpacity
+  <TouchableOpacity
     onPress={onPress}
     className={`mr-2 rounded-full px-5 py-3 ${active ? 'bg-primary-500' : 'bg-gray-200'}`}>
-    <StyledText className={`font-JakartaMedium ${active ? 'text-white' : 'text-gray-600'}`}>
-      {title}
-    </StyledText>
-  </StyledTouchableOpacity>
+    <Text className={`font-JakartaMedium ${active ? 'text-white' : 'text-gray-600'}`}>{title}</Text>
+  </TouchableOpacity>
 );
 
 interface ConsultationCardProps {
@@ -58,33 +47,33 @@ const ConsultationCard: React.FC<ConsultationCardProps> = ({
     switch (consultation.status) {
       case 'pending':
         return (
-          <StyledView className="rounded bg-yellow-100 px-2 py-1">
-            <StyledText className="text-xs text-yellow-800">Pendente</StyledText>
-          </StyledView>
+          <View className="rounded bg-yellow-100 px-2 py-1">
+            <Text className="text-xs text-yellow-800">Pendente</Text>
+          </View>
         );
       case 'accepted':
         return (
-          <StyledView className="rounded bg-blue-100 px-2 py-1">
-            <StyledText className="text-xs text-blue-800">Agendada</StyledText>
-          </StyledView>
+          <View className="rounded bg-blue-100 px-2 py-1">
+            <Text className="text-xs text-blue-800">Agendada</Text>
+          </View>
         );
       case 'in_progress':
         return (
-          <StyledView className="rounded bg-green-100 px-2 py-1">
-            <StyledText className="text-xs text-green-800">Em andamento</StyledText>
-          </StyledView>
+          <View className="rounded bg-green-100 px-2 py-1">
+            <Text className="text-xs text-green-800">Em andamento</Text>
+          </View>
         );
       case 'completed':
         return (
-          <StyledView className="rounded bg-gray-100 px-2 py-1">
-            <StyledText className="text-xs text-gray-800">Concluída</StyledText>
-          </StyledView>
+          <View className="rounded bg-gray-100 px-2 py-1">
+            <Text className="text-xs text-gray-800">Concluída</Text>
+          </View>
         );
       case 'cancelled':
         return (
-          <StyledView className="rounded bg-red-100 px-2 py-1">
-            <StyledText className="text-xs text-red-800">Cancelada</StyledText>
-          </StyledView>
+          <View className="rounded bg-red-100 px-2 py-1">
+            <Text className="text-xs text-red-800">Cancelada</Text>
+          </View>
         );
       default:
         return null;
@@ -92,60 +81,56 @@ const ConsultationCard: React.FC<ConsultationCardProps> = ({
   };
 
   return (
-    <StyledTouchableOpacity onPress={onPress} className="mb-3 rounded-xl bg-white p-4 shadow-sm">
-      <StyledView className="mb-2 flex-row items-center justify-between">
-        <StyledText className="font-JakartaSemiBold text-lg">
-          {consultation.patient.name}
-        </StyledText>
+    <TouchableOpacity onPress={onPress} className="mb-3 rounded-xl bg-white p-4 shadow-sm">
+      <View className="mb-2 flex-row items-center justify-between">
+        <Text className="font-JakartaSemiBold text-lg">{consultation.patient.name}</Text>
         {getStatusBadge()}
-      </StyledView>
+      </View>
 
-      <StyledText className="mb-2 text-gray-600" numberOfLines={2}>
+      <Text className="mb-2 text-gray-600" numberOfLines={2}>
         {consultation.complaint.substring(0, 100)}
         {consultation.complaint.length > 100 ? '...' : ''}
-      </StyledText>
+      </Text>
 
-      <StyledView className="mb-1 flex-row items-center">
-        <StyledImage source={icons.map} className="mr-1 h-4 w-4" />
-        <StyledText className="text-sm text-gray-500" numberOfLines={1}>
+      <View className="mb-1 flex-row items-center">
+        <Image source={icons.map} className="mr-1 h-4 w-4" />
+        <Text className="text-sm text-gray-500" numberOfLines={1}>
           {consultation.originAddress}
-        </StyledText>
-      </StyledView>
+        </Text>
+      </View>
 
       {consultation.scheduledTime && (
-        <StyledView className="mb-2 flex-row items-center">
-          <StyledImage source={icons.marker} className="mr-1 h-4 w-4" />{' '}
+        <View className="mb-2 flex-row items-center">
+          <Image source={icons.marker} className="mr-1 h-4 w-4" />{' '}
           {/* Substituindo o ícone clock que não existe */}
-          <StyledText className="text-sm text-gray-500">
+          <Text className="text-sm text-gray-500">
             {new Date(consultation.scheduledTime).toLocaleDateString()} às{' '}
             {new Date(consultation.scheduledTime).toLocaleTimeString([], {
               hour: '2-digit',
               minute: '2-digit',
             })}
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
       )}
 
       {consultation.status === 'pending' && (
-        <StyledView className="mt-2 flex-row">
-          <StyledTouchableOpacity
+        <View className="mt-2 flex-row">
+          <TouchableOpacity
             onPress={() => onAccept(consultation.consultationId)}
             className="mr-2 flex-1 rounded-lg bg-primary-500 px-4 py-2">
-            <StyledText className="text-center font-JakartaMedium text-white">Aceitar</StyledText>
-          </StyledTouchableOpacity>
+            <Text className="text-center font-JakartaMedium text-white">Aceitar</Text>
+          </TouchableOpacity>
 
-          <StyledTouchableOpacity
+          <TouchableOpacity
             onPress={() => onDecline(consultation.consultationId)}
             className="flex-1 rounded-lg bg-general-700 px-4 py-2">
-            <StyledText className="text-center font-JakartaMedium text-gray-700">
-              Recusar
-            </StyledText>
-          </StyledTouchableOpacity>
-        </StyledView>
+            <Text className="text-center font-JakartaMedium text-gray-700">Recusar</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {consultation.status === 'accepted' && (
-        <StyledTouchableOpacity
+        <TouchableOpacity
           onPress={() =>
             router.navigate({
               pathname: '/(doctor)/active-consultation',
@@ -153,12 +138,10 @@ const ConsultationCard: React.FC<ConsultationCardProps> = ({
             } as any)
           }
           className="mt-2 rounded-lg bg-success-500 px-4 py-2">
-          <StyledText className="text-center font-JakartaMedium text-white">
-            Iniciar Atendimento
-          </StyledText>
-        </StyledTouchableOpacity>
+          <Text className="text-center font-JakartaMedium text-white">Iniciar Atendimento</Text>
+        </TouchableOpacity>
       )}
-    </StyledTouchableOpacity>
+    </TouchableOpacity>
   );
 };
 
@@ -206,11 +189,11 @@ const DoctorConsultations: React.FC = () => {
   };
 
   return (
-    <StyledSafeAreaView className="flex-1 bg-general-500">
-      <StyledView className="p-5">
-        <StyledText className="mb-5 font-JakartaBold text-2xl">Minhas Consultas</StyledText>
+    <SafeAreaView className="flex-1 bg-general-500">
+      <View className="p-5">
+        <Text className="mb-5 font-JakartaBold text-2xl">Minhas Consultas</Text>
 
-        <StyledScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
           <TabButton
             title="Pendentes"
             active={activeTab === 'pending'}
@@ -231,12 +214,12 @@ const DoctorConsultations: React.FC = () => {
             active={activeTab === 'completed'}
             onPress={() => setActiveTab('completed')}
           />
-        </StyledScrollView>
+        </ScrollView>
 
         {loading ? (
-          <StyledView className="flex-1 items-center justify-center py-10">
+          <View className="flex-1 items-center justify-center py-10">
             <ActivityIndicator size="large" color="#0286FF" />
-          </StyledView>
+          </View>
         ) : (
           <>
             {consultations && consultations.length > 0 ? (
@@ -254,9 +237,9 @@ const DoctorConsultations: React.FC = () => {
                 contentContainerStyle={{ paddingBottom: 100 }}
               />
             ) : (
-              <StyledView className="items-center justify-center py-10">
-                <StyledImage source={images.noResult} className="h-40 w-40" resizeMode="contain" />
-                <StyledText className="mt-2 text-gray-500">
+              <View className="items-center justify-center py-10">
+                <Image source={images.noResult} className="h-40 w-40" resizeMode="contain" />
+                <Text className="mt-2 text-gray-500">
                   {activeTab === 'pending'
                     ? 'Nenhuma consulta pendente'
                     : activeTab === 'accepted'
@@ -264,13 +247,13 @@ const DoctorConsultations: React.FC = () => {
                       : activeTab === 'in_progress'
                         ? 'Nenhuma consulta em andamento'
                         : 'Nenhuma consulta concluída'}
-                </StyledText>
-              </StyledView>
+                </Text>
+              </View>
             )}
           </>
         )}
-      </StyledView>
-    </StyledSafeAreaView>
+      </View>
+    </SafeAreaView>
   );
 };
 

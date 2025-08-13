@@ -1,3 +1,6 @@
+import { useUser } from '@clerk/clerk-expo';
+import { router, useLocalSearchParams } from 'expo-router';
+import { fetchAPI } from 'lib/fetch';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,9 +12,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useUser } from '@clerk/clerk-expo';
-import { fetchAPI } from 'lib/fetch';
+
 import {
   ConsultationDetails,
   MedicalRecord as MedicalRecordType,

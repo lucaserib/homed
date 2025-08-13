@@ -1,10 +1,11 @@
+import CustomButton from 'components/CustomButton';
 import GoogleTextInput from 'components/GoogleTextInput';
 import RideLayout from 'components/RideLayout';
-import { icons } from '../../constants';
+import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 import { useLocationStore } from 'store';
-import CustomButton from 'components/CustomButton';
-import { router } from 'expo-router';
+
+import { icons } from '../../constants';
 
 const FindRide = () => {
   const { userAddress, destinationAddress, setDestinationLocation, setUserLocation } =

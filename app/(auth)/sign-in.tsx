@@ -1,3 +1,10 @@
+import { useSignIn, useAuth } from '@clerk/clerk-expo';
+import CustomButton from 'components/CustomButton';
+import InputField from 'components/InputField';
+import OAuth from 'components/OAuth';
+import { Link, useRouter } from 'expo-router';
+import { fetchAPI } from 'lib/fetch';
+import React, { useState } from 'react';
 import {
   Text,
   SafeAreaView,
@@ -8,14 +15,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import React, { useState } from 'react';
+
 import { icons, images } from '../../constants';
-import InputField from 'components/InputField';
-import CustomButton from 'components/CustomButton';
-import { Link, useRouter } from 'expo-router';
-import OAuth from 'components/OAuth';
-import { useSignIn, useAuth } from '@clerk/clerk-expo';
-import { fetchAPI } from 'lib/fetch';
 
 const SignIn = () => {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -23,7 +24,6 @@ const SignIn = () => {
   const router = useRouter();
   const [isDoctor, setIsDoctor] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -51,16 +51,22 @@ const SignIn = () => {
               throw new Error('User ID não disponível');
             }
 
-            const response = await fetchAPI(`/(api)/doctor/check/${currentUserId}`);
-            if (response.data) {
-              if (response.data.approvalStatus === 'approved') {
-                router.replace({
-                  pathname: '/(doctor)/(tabs)/dashboard',
-                } as any);
-              } else {
+            const userEmail = form.email;
+            const response = await fetchAPI(`/doctor/check?email=${encodeURIComponent(userEmail)}`);
+
+            if (response.success && response.data) {
+              if (response.data.approvalStatus === 'APPROVED') {
+                router.replace('/(doctor)/(tabs)/dashboard');
+              } else if (response.data.approvalStatus === 'PENDING') {
                 Alert.alert(
                   'Conta em análise',
                   'Sua conta de médico ainda está em análise pela nossa equipe. Você receberá um email quando sua conta for aprovada.',
+                  [{ text: 'OK', style: 'default' }]
+                );
+              } else {
+                Alert.alert(
+                  'Conta rejeitada',
+                  'Sua conta de médico foi rejeitada. Entre em contato com nosso suporte para mais informações.',
                   [{ text: 'OK', style: 'default' }]
                 );
               }
@@ -154,7 +160,7 @@ const SignIn = () => {
             label="Senha"
             placeholder="Digite sua senha"
             icon={icons.lock}
-            secureTextEntry={true}
+            secureTextEntry
             value={form.password}
             onChangeText={(value) => setForm({ ...form, password: value })}
           />

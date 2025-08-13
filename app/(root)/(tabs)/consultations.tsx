@@ -1,9 +1,10 @@
-import { View, Text, SafeAreaView, FlatList, Image, ActivityIndicator } from 'react-native';
-import React from 'react';
 import { useUser } from '@clerk/clerk-expo';
-import { Ride } from 'types/type';
-import { useFetch } from 'lib/fetch';
 import RideCard from 'components/RideCard';
+import { useFetch } from 'lib/fetch';
+import React from 'react';
+import { View, Text, SafeAreaView, FlatList, Image, ActivityIndicator } from 'react-native';
+import { Ride } from 'types/type';
+
 import { images } from '../../../constants';
 
 const History = () => {

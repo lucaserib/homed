@@ -1,3 +1,14 @@
+import { useSignUp } from '@clerk/clerk-expo';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import CustomButton from 'components/CustomButton';
+import InputField from 'components/InputField';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import * as ImagePicker from 'expo-image-picker';
+import { Link, router } from 'expo-router';
+import { fetchAPI } from 'lib/fetch';
+import { maskCPF, maskCNPJ } from 'lib/mask';
+import React, { useState } from 'react';
 import {
   Text,
   ScrollView,
@@ -8,19 +19,9 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import React, { useState } from 'react';
-import { icons, images } from '../../constants';
-import InputField from 'components/InputField';
-import CustomButton from 'components/CustomButton';
-import { Link, router } from 'expo-router';
-import { useSignUp } from '@clerk/clerk-expo';
 import ReactNativeModal from 'react-native-modal';
-import { fetchAPI } from 'lib/fetch';
-import * as ImagePicker from 'expo-image-picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { maskCPF, maskCNPJ } from 'lib/mask';
+
+import { icons, images } from '../../constants';
 
 const DoctorSignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -290,7 +291,7 @@ const DoctorSignUp = () => {
           }),
         });
 
-        await fetchAPI('/(api)/doctor', {
+        await fetchAPI('/doctor/register', {
           method: 'POST',
           body: JSON.stringify({
             firstName: form.firstName,
@@ -304,11 +305,8 @@ const DoctorSignUp = () => {
             cnpj: form.cnpj.replace(/[^\d]/g, ''),
             companyName: form.companyName,
             address: form.address,
-            hourlyRate: form.hourlyRate,
-            serviceRadius: form.serviceRadius,
-            profileImageUrl: imageUrl,
-            approvalStatus: 'pending',
-            clerkId: createdUserId,
+            pricePerConsultation: parseFloat(form.hourlyRate || '0'),
+            profileImage: imageUrl,
           }),
         });
 
@@ -422,7 +420,7 @@ const DoctorSignUp = () => {
             label="Senha"
             placeholder="Digite sua senha"
             icon={icons.lock}
-            secureTextEntry={true}
+            secureTextEntry
             value={form.password}
             onChangeText={(value) => {
               setForm({ ...form, password: value });

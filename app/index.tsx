@@ -1,8 +1,8 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Redirect, router } from 'expo-router';
+import { fetchAPI } from 'lib/fetch';
 import { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { fetchAPI } from 'lib/fetch';
 
 const Home = () => {
   const { isSignedIn, userId } = useAuth();

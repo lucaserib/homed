@@ -1,6 +1,5 @@
 declare module 'nativewind' {
-  import React from 'react';
-  import { ComponentType } from 'react';
+  import React, { ComponentType } from 'react';
 
   /**
    * Tipo para componentes estilizados do NativeWind

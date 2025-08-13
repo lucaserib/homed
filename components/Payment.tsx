@@ -1,17 +1,20 @@
-import { Alert, Image, Text, View } from 'react-native';
-import React, { useState } from 'react';
-import CustomButton from './CustomButton';
-import { useStripe } from '@stripe/stripe-react-native';
-import { fetchAPI } from 'lib/fetch';
-import { PaymentProps } from 'types/type';
-import { useLocationStore } from 'store';
 import { useAuth } from '@clerk/clerk-expo';
-import ReactNativeModal from 'react-native-modal';
-import { images } from '../constants';
 import { router } from 'expo-router';
+import { fetchAPI } from 'lib/fetch';
+import React, { useState } from 'react';
+import { Alert, Image, Text, View } from 'react-native';
+import ReactNativeModal from 'react-native-modal';
+import { useLocationStore } from 'store';
+import { PaymentProps } from 'types/type';
+
+import CustomButton from './CustomButton';
+
+// import { useStripe } from '@stripe/stripe-react-native';
+
+import { images } from '../constants';
 
 const Payment = ({ fullName, email, amount, driverId, rideTime }: PaymentProps) => {
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  // const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const { userId } = useAuth();
   const [success, setSuccess] = useState(false);
@@ -40,8 +43,8 @@ const Payment = ({ fullName, email, amount, driverId, rideTime }: PaymentProps) 
             },
             body: JSON.stringify({
               name: fullName || email.split('@')[0],
-              email: email,
-              amount: amount,
+              email,
+              amount,
               paymentMethodId: paymentMethod.id,
             }),
           });

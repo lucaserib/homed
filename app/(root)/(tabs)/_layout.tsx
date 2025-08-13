@@ -1,6 +1,7 @@
-import { View, Image, ImageSourcePropType, SafeAreaView } from 'react-native';
-import React from 'react';
 import { Tabs } from 'expo-router';
+import React from 'react';
+import { View, Image, ImageSourcePropType, SafeAreaView } from 'react-native';
+
 import { icons } from '../../../constants';
 
 const TabIcon = ({ source, focused }: { source: ImageSourcePropType; focused: boolean }) => (
@@ -45,9 +46,9 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="consultations"
         options={{
-          title: 'Histórico',
+          title: 'Consultas',
           headerShown: false,
           tabBarIcon: ({ focused }) => <TabIcon source={icons.list} focused={focused} />,
         }}

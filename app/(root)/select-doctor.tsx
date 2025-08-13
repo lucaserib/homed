@@ -1,9 +1,9 @@
-import { View, FlatList } from 'react-native';
-import React from 'react';
-import RideLayout from 'components/RideLayout';
-import DriverCard from 'components/DriverCard';
 import CustomButton from 'components/CustomButton';
+import DriverCard from 'components/DriverCard';
+import RideLayout from 'components/RideLayout';
 import { router } from 'expo-router';
+import React from 'react';
+import { View, FlatList } from 'react-native';
 import { useDriverStore } from 'store';
 
 const ConfirmRide = () => {

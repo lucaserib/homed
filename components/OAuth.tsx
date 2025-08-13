@@ -1,10 +1,11 @@
-import { View, Text, Image, Alert } from 'react-native';
-import React, { useCallback } from 'react';
-import CustomButton from './CustomButton';
-import { icons } from '../constants/index';
 import { useSSO } from '@clerk/clerk-expo';
 import { googleOAuth } from 'cache';
 import { router } from 'expo-router';
+import React, { useCallback } from 'react';
+import { View, Text, Image, Alert } from 'react-native';
+
+import CustomButton from './CustomButton';
+import { icons } from '../constants/index';
 
 const OAuth = () => {
   const { startSSOFlow } = useSSO();

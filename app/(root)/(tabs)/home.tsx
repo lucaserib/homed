@@ -1,7 +1,11 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import * as Location from 'expo-location';
+import GoogleTextInput from 'components/GoogleTextInput';
+import Map from 'components/Map';
 import RideCard from 'components/RideCard';
-import { icons, images } from '../../../constants';
+import * as Location from 'expo-location';
+import { router } from 'expo-router';
+import { useFetch } from 'lib/fetch';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,13 +15,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import GoogleTextInput from 'components/GoogleTextInput';
-import Map from 'components/Map';
 import { useLocationStore } from 'store';
-import { useEffect, useState } from 'react';
-import { router } from 'expo-router';
-import { useFetch } from 'lib/fetch';
 import { Ride } from 'types/type';
+
+import { icons, images } from '../../../constants';
 
 export default function Page() {
   const { setUserLocation, setDestinationLocation } = useLocationStore();
@@ -45,14 +46,14 @@ export default function Page() {
 
   useEffect(() => {
     const requestLocation = async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== 'granted') {
         setHasPermissions(false);
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync();
+      const location = await Location.getCurrentPositionAsync();
 
       const address = await Location.reverseGeocodeAsync({
         latitude: location.coords?.latitude!,
@@ -71,9 +72,9 @@ export default function Page() {
   }, []);
 
   return (
-    <SafeAreaView className="bg-general-500">
+    <SafeAreaView className="h-full bg-general-500">
       <FlatList
-        data={recentRides?.slice(0, 5)}
+        data={recentRides?.slice(0, 5) || []}
         renderItem={({ item }) => <RideCard ride={item} />}
         className="px-5"
         keyboardShouldPersistTaps="handled"

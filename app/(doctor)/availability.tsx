@@ -1,3 +1,7 @@
+import { useUser } from '@clerk/clerk-expo';
+import Slider from '@react-native-community/slider';
+import { router } from 'expo-router';
+import { useFetch, fetchAPI } from 'lib/fetch';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -10,11 +14,6 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useUser } from '@clerk/clerk-expo';
-import { useFetch } from 'lib/fetch';
-import { fetchAPI } from 'lib/fetch';
-import { router } from 'expo-router';
-import Slider from '@react-native-community/slider';
 
 type DayAvailability = {
   available: boolean;

@@ -1,13 +1,12 @@
+import { useUser } from '@clerk/clerk-expo';
+import { StripeProvider } from '@stripe/stripe-react-native';
+import Payment from 'components/Payment';
 import { Image, Text, View } from 'react-native';
 
 import RideLayout from '../../components/RideLayout';
 import { icons } from '../../constants';
 import { formatTime } from '../../lib/utils';
 import { useDriverStore, useLocationStore } from '../../store';
-import Payment from 'components/Payment';
-
-import { StripeProvider } from '@stripe/stripe-react-native';
-import { useUser } from '@clerk/clerk-expo';
 
 const BookRide = () => {
   const { userAddress, destinationAddress } = useLocationStore();

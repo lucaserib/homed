@@ -59,7 +59,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       data: {
         consultationId: id,
         patientId: existingConsultation.patientId,
-        doctorId: doctorId,
+        doctorId,
         diagnosis: diagnosis || '',
         treatment: treatment || '',
         notes: notes || '',
@@ -75,7 +75,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
         status: 'completed',
         endTime: finishTime,
         duration: durationMinutes,
-        totalPrice: totalPrice,
+        totalPrice,
         paymentStatus: 'pending',
       },
     });
@@ -84,8 +84,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
       data: {
         consultationId: id,
         amount: totalPrice,
-        platformFee: platformFee,
-        doctorPayout: doctorPayout,
+        platformFee,
+        doctorPayout,
         status: 'pending',
       },
     });
@@ -96,7 +96,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
         currency: 'brl',
         metadata: {
           consultationId: id,
-          doctorId: doctorId,
+          doctorId,
           patientId: existingConsultation.patientId,
         },
       });

@@ -1,7 +1,8 @@
 // app/(doctor)/(tabs)/_layout.tsx
-import { View, Image, ImageSourcePropType, SafeAreaView } from 'react-native';
-import React from 'react';
 import { Tabs } from 'expo-router';
+import React from 'react';
+import { View, Image, ImageSourcePropType, SafeAreaView } from 'react-native';
+
 import { icons } from '../../../constants';
 
 const TabIcon = ({ source, focused }: { source: ImageSourcePropType; focused: boolean }) => (

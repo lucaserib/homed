@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { InputFieldProps } from 'types/type';
+
 import CustomButton from './CustomButton';
 
 const InputField = ({

@@ -1,3 +1,15 @@
+import { useSignUp } from '@clerk/clerk-expo';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import CustomButton from 'components/CustomButton';
+import InputField from 'components/InputField';
+import OAuth from 'components/OAuth';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import * as ImagePicker from 'expo-image-picker';
+import { Link, router } from 'expo-router';
+import { fetchAPI } from 'lib/fetch';
+import { maskCPF } from 'lib/mask';
+import React, { useState } from 'react';
 import {
   Text,
   ScrollView,
@@ -8,20 +20,9 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import React, { useState } from 'react';
-import { icons, images } from '../../constants';
-import InputField from 'components/InputField';
-import CustomButton from 'components/CustomButton';
-import { Link, router } from 'expo-router';
-import OAuth from 'components/OAuth';
-import { useSignUp } from '@clerk/clerk-expo';
 import ReactNativeModal from 'react-native-modal';
-import { fetchAPI } from 'lib/fetch';
-import * as ImagePicker from 'expo-image-picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { maskCPF } from 'lib/mask';
+
+import { icons, images } from '../../constants';
 
 const SignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -320,7 +321,7 @@ const SignUp = () => {
             label="Senha"
             placeholder="Digite sua senha"
             icon={icons.lock}
-            secureTextEntry={true}
+            secureTextEntry
             value={form.password}
             onChangeText={(value) => {
               setForm({ ...form, password: value });

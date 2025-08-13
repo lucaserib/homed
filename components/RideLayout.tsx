@@ -1,10 +1,11 @@
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
-import { icons } from '../constants';
 import React, { useRef } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+import { icons } from '../constants';
 import Map from './Map';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 
 const RideLayout = ({
   title,

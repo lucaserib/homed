@@ -1,4 +1,7 @@
 // app/(doctor)/(tabs)/dashboard.tsx
+import { useAuth, useUser } from '@clerk/clerk-expo';
+import Map from 'components/Map';
+import { router } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
@@ -10,23 +13,10 @@ import {
   Switch,
   ActivityIndicator,
 } from 'react-native';
-import { useAuth, useUser } from '@clerk/clerk-expo';
-import { useFetch, fetchAPI } from '../../../lib/fetch';
-import { router } from 'expo-router';
+
 import { icons, images } from '../../../constants';
-import Map from 'components/Map';
-import * as NativeWind from 'nativewind';
+import { useFetch, fetchAPI } from '../../../lib/fetch';
 import { Doctor, ConsultationDetails } from '../../../types/consultation';
-
-const styled = NativeWind.styled;
-
-// Componentes estilizados
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledSafeAreaView = styled(SafeAreaView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledScrollView = styled(ScrollView);
-const StyledImage = styled(Image);
 
 interface DoctorDataResponse {
   data: Doctor & {
@@ -98,9 +88,9 @@ const DoctorDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <StyledSafeAreaView className="flex-1 items-center justify-center bg-general-500">
+      <SafeAreaView className="flex-1 items-center justify-center bg-general-500">
         <ActivityIndicator size="large" color="#0286FF" />
-      </StyledSafeAreaView>
+      </SafeAreaView>
     );
   }
 
@@ -114,90 +104,80 @@ const DoctorDashboard: React.FC = () => {
   };
 
   return (
-    <StyledSafeAreaView className="flex-1 bg-general-500">
-      <StyledScrollView className="p-5">
-        <StyledView className="my-5 flex flex-row items-center justify-between">
-          <StyledText className="font-JakartaExtraBold text-2xl capitalize">
+    <SafeAreaView className="flex-1 bg-general-500">
+      <ScrollView className="p-5">
+        <View className="my-5 flex flex-row items-center justify-between">
+          <Text className="font-JakartaExtraBold text-2xl capitalize">
             Bem vindo, Dr. {user?.firstName || 'Médico'}
-          </StyledText>
-          <StyledTouchableOpacity
+          </Text>
+          <TouchableOpacity
             onPress={handleSignOut}
             className="h-10 w-10 items-center justify-center rounded-full bg-white">
-            <StyledImage source={icons.out} className="h-6 w-6" />
-          </StyledTouchableOpacity>
-        </StyledView>
+            <Image source={icons.out} className="h-6 w-6" />
+          </TouchableOpacity>
+        </View>
 
-        <StyledView className="mb-5 rounded-xl bg-white p-4 shadow-sm">
-          <StyledView className="flex-row items-center justify-between">
-            <StyledView>
-              <StyledText className="font-JakartaSemiBold text-lg">Status</StyledText>
-              <StyledText className="mt-1 font-JakartaMedium text-gray-500">
+        <View className="mb-5 rounded-xl bg-white p-4 shadow-sm">
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text className="font-JakartaSemiBold text-lg">Status</Text>
+              <Text className="mt-1 font-JakartaMedium text-gray-500">
                 {isAvailable
                   ? 'Você está disponível para receber consultas'
                   : 'Você está indisponível para consultas'}
-              </StyledText>
-            </StyledView>
+              </Text>
+            </View>
             <Switch
               trackColor={{ false: '#E0E0E0', true: '#ADE5B9' }}
               thumbColor={isAvailable ? '#38A169' : '#999999'}
               onValueChange={toggleAvailability}
               value={isAvailable}
             />
-          </StyledView>
+          </View>
 
-          <StyledTouchableOpacity
+          <TouchableOpacity
             onPress={navigateToAvailability}
             className="mt-3 flex-row items-center rounded-lg bg-gray-100 p-3">
-            <StyledImage source={icons.map} className="mr-2 h-5 w-5" />
-            <StyledText className="font-JakartaMedium">Configurar disponibilidade</StyledText>
-          </StyledTouchableOpacity>
-        </StyledView>
+            <Image source={icons.map} className="mr-2 h-5 w-5" />
+            <Text className="font-JakartaMedium">Configurar disponibilidade</Text>
+          </TouchableOpacity>
+        </View>
 
-        <StyledText className="mb-3 font-JakartaBold text-xl">Resumo</StyledText>
-        <StyledView className="mb-5 flex-row flex-wrap justify-between">
-          <StyledView className="mb-3 w-[48%] rounded-xl bg-white p-4 shadow-sm">
-            <StyledText className="font-JakartaMedium text-gray-500">
-              Consultas pendentes
-            </StyledText>
-            <StyledText className="mt-1 font-JakartaBold text-2xl">
-              {stats.pendingConsultations}
-            </StyledText>
-          </StyledView>
+        <Text className="mb-3 font-JakartaBold text-xl">Resumo</Text>
+        <View className="mb-5 flex-row flex-wrap justify-between">
+          <View className="mb-3 w-[48%] rounded-xl bg-white p-4 shadow-sm">
+            <Text className="font-JakartaMedium text-gray-500">Consultas pendentes</Text>
+            <Text className="mt-1 font-JakartaBold text-2xl">{stats.pendingConsultations}</Text>
+          </View>
 
-          <StyledView className="mb-3 w-[48%] rounded-xl bg-white p-4 shadow-sm">
-            <StyledText className="font-JakartaMedium text-gray-500">Consultas hoje</StyledText>
-            <StyledText className="mt-1 font-JakartaBold text-2xl">
-              {stats.todayConsultations}
-            </StyledText>
-          </StyledView>
+          <View className="mb-3 w-[48%] rounded-xl bg-white p-4 shadow-sm">
+            <Text className="font-JakartaMedium text-gray-500">Consultas hoje</Text>
+            <Text className="mt-1 font-JakartaBold text-2xl">{stats.todayConsultations}</Text>
+          </View>
 
-          <StyledView className="w-[48%] rounded-xl bg-white p-4 shadow-sm">
-            <StyledText className="font-JakartaMedium text-gray-500">Ganhos totais</StyledText>
-            <StyledText className="mt-1 font-JakartaBold text-2xl">
-              R$ {stats.totalEarnings}
-            </StyledText>
-          </StyledView>
+          <View className="w-[48%] rounded-xl bg-white p-4 shadow-sm">
+            <Text className="font-JakartaMedium text-gray-500">Ganhos totais</Text>
+            <Text className="mt-1 font-JakartaBold text-2xl">R$ {stats.totalEarnings}</Text>
+          </View>
 
-          <StyledView className="w-[48%] rounded-xl bg-white p-4 shadow-sm">
-            <StyledText className="font-JakartaMedium text-gray-500">Avaliação</StyledText>
-            <StyledView className="mt-1 flex-row items-center">
-              <StyledText className="mr-1 font-JakartaBold text-2xl">
-                {stats.rating.toFixed(1)}
-              </StyledText>
-              <StyledImage source={icons.star} className="h-5 w-5" />
-            </StyledView>
-          </StyledView>
-        </StyledView>
+          <View className="w-[48%] rounded-xl bg-white p-4 shadow-sm">
+            <Text className="font-JakartaMedium text-gray-500">Avaliação</Text>
+            <View className="mt-1 flex-row items-center">
+              <Text className="mr-1 font-JakartaBold text-2xl">{stats.rating.toFixed(1)}</Text>
+              <Image source={icons.star} className="h-5 w-5" />
+            </View>
+          </View>
+        </View>
 
-        <StyledText className="mb-3 font-JakartaBold text-xl">Sua Localização</StyledText>
-        <StyledView className="mb-5 h-[300px] overflow-hidden rounded-xl">
+        <Text className="mb-3 font-JakartaBold text-xl">Sua Localização</Text>
+        <View className="mb-5 h-[300px] overflow-hidden rounded-xl">
           <Map />
-        </StyledView>
+        </View>
 
-        <StyledText className="mb-3 font-JakartaBold text-xl">Próximas Consultas</StyledText>
+        <Text className="mb-3 font-JakartaBold text-xl">Próximas Consultas</Text>
         {doctorData?.upcomingConsultations && doctorData.upcomingConsultations.length > 0 ? (
           doctorData.upcomingConsultations.map((consultation: ConsultationDetails) => (
-            <StyledTouchableOpacity
+            <TouchableOpacity
               key={consultation.consultationId}
               onPress={() =>
                 router.navigate({
@@ -206,27 +186,25 @@ const DoctorDashboard: React.FC = () => {
                 } as any)
               }
               className="mb-3 rounded-xl bg-white p-4 shadow-sm">
-              <StyledView className="flex-row items-center justify-between">
-                <StyledText className="font-JakartaSemiBold">
-                  {consultation.patient.name}
-                </StyledText>
-                <StyledText className="font-JakartaSemiBold text-primary-500">
+              <View className="flex-row items-center justify-between">
+                <Text className="font-JakartaSemiBold">{consultation.patient.name}</Text>
+                <Text className="font-JakartaSemiBold text-primary-500">
                   {formatTime(consultation.scheduledTime)}
-                </StyledText>
-              </StyledView>
-              <StyledText className="mt-1 text-gray-500">
+                </Text>
+              </View>
+              <Text className="mt-1 text-gray-500">
                 {consultation.complaint.substring(0, 50)}...
-              </StyledText>
-            </StyledTouchableOpacity>
+              </Text>
+            </TouchableOpacity>
           ))
         ) : (
-          <StyledView className="items-center justify-center rounded-xl bg-white p-5">
-            <StyledImage source={images.noResult} className="h-40 w-40" />
-            <StyledText className="mt-2 text-gray-500">Nenhuma consulta agendada</StyledText>
-          </StyledView>
+          <View className="items-center justify-center rounded-xl bg-white p-5">
+            <Image source={images.noResult} className="h-40 w-40" />
+            <Text className="mt-2 text-gray-500">Nenhuma consulta agendada</Text>
+          </View>
         )}
-      </StyledScrollView>
-    </StyledSafeAreaView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

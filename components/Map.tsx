@@ -1,11 +1,12 @@
 import { useFetch } from 'lib/fetch';
-import { icons } from '../constants';
 import { calculateDriverTimes, calculateRegion, generateMarkersFromData } from 'lib/map';
 import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT, Polyline } from 'react-native-maps';
 import { useLocationStore, useDriverStore } from 'store';
 import { Driver, MarkerData } from 'types/type';
-import { ActivityIndicator, Text, View } from 'react-native';
+
+import { icons } from '../constants';
 
 const Map = () => {
   const { data: drivers, loading, error } = useFetch<Driver[]>('/(api)/driver');
@@ -118,7 +119,7 @@ const Map = () => {
   if (loading || !userLatitude || !userLongitude) {
     return (
       <View className="flex w-full items-center justify-between">
-        <ActivityIndicator size={'small'} color={'#000'} />
+        <ActivityIndicator size="small" color="#000" />
       </View>
     );
   }
@@ -181,7 +182,7 @@ const Map = () => {
       tintColor="black"
       mapType="mutedStandard"
       showsPointsOfInterest={false}
-      showsUserLocation={true}
+      showsUserLocation
       userInterfaceStyle="light"
       initialRegion={region}>
       {markers.map((marker) => (

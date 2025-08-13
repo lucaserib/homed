@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+
 import prisma from './prisma';
 
 // Configuração do transportador de email

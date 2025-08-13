@@ -1,3 +1,8 @@
+import { useSignIn } from '@clerk/clerk-expo';
+import CustomButton from 'components/CustomButton';
+import InputField from 'components/InputField';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
 import {
   Text,
   View,
@@ -7,13 +12,9 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
-import React, { useState } from 'react';
-import { icons, images } from '../../constants';
-import InputField from 'components/InputField';
-import CustomButton from 'components/CustomButton';
-import { router } from 'expo-router';
-import { useSignIn } from '@clerk/clerk-expo';
 import ReactNativeModal from 'react-native-modal';
+
+import { icons, images } from '../../constants';
 
 const ResetPassword = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -159,7 +160,7 @@ const ResetPassword = () => {
           label="Nova Senha"
           placeholder="Digite sua nova senha"
           icon={icons.lock}
-          secureTextEntry={true}
+          secureTextEntry
           value={form.newPassword}
           onChangeText={(value) => {
             setForm({ ...form, newPassword: value });
@@ -177,7 +178,7 @@ const ResetPassword = () => {
           label="Confirmar Nova Senha"
           placeholder="Confirme sua nova senha"
           icon={icons.lock}
-          secureTextEntry={true}
+          secureTextEntry
           value={form.confirmPassword}
           onChangeText={(value) => {
             setForm({ ...form, confirmPassword: value });
