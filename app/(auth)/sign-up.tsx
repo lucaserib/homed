@@ -159,8 +159,6 @@ const SignUp = () => {
       await signUp.create({
         emailAddress: form.email,
         password: form.password,
-        firstName: form.name.split(' ')[0],
-        lastName: form.name.split(' ').slice(1).join(' '),
       });
 
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });

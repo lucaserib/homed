@@ -42,7 +42,7 @@ export const googleOAuth = async (startSSOFlow: any) => {
           await fetchAPI('/(api)/user', {
             method: 'POST',
             body: JSON.stringify({
-              name: `${signUp.firstName} ${signUp.lastName}`,
+              name: signUp.emailAddress.split('@')[0], // Use email prefix as default name
               email: signUp.emailAddress,
               clerkId: signUp.createdUserId,
             }),

@@ -226,8 +226,6 @@ const DoctorSignUp = () => {
       await signUp.create({
         emailAddress: form.email,
         password: form.password,
-        firstName: form.firstName,
-        lastName: form.lastName,
       });
 
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
