@@ -1,210 +1,197 @@
-// app/(doctor)/(tabs)/dashboard.tsx
-import { useAuth, useUser } from '@clerk/clerk-expo';
-import Map from 'components/Map';
+import { useUser } from '@clerk/clerk-expo';
+import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  SafeAreaView,
-  View,
   Text,
+  View,
   TouchableOpacity,
   Image,
-  ScrollView,
-  Switch,
   ActivityIndicator,
+  Alert,
+  Switch,
+  Platform,
 } from 'react-native';
+import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { icons, images } from '../../../constants';
-import { useFetch, fetchAPI } from '../../../lib/fetch';
-import { Doctor, ConsultationDetails } from '../../../types/consultation';
+import { fetchAPI } from 'lib/fetch';
+import { useLocationStore } from 'store';
+import { connectSocket, disconnectSocket } from 'lib/socket';
 
-interface DoctorDataResponse {
-  data: Doctor & {
-    upcomingConsultations?: ConsultationDetails[];
-  };
-}
-
-const DoctorDashboard: React.FC = () => {
+const DoctorDashboard = () => {
   const { user } = useUser();
-  const { signOut } = useAuth();
+  const { setUserLocation, userLatitude, userLongitude } = useLocationStore();
+  
   const [isAvailable, setIsAvailable] = useState(false);
-  const [stats, setStats] = useState({
-    pendingConsultations: 0,
-    todayConsultations: 0,
-    totalEarnings: 0,
-    rating: 0,
-  });
-
-  const {
-    data: doctorDataResponse,
-    loading,
-    refetch,
-  } = useFetch<DoctorDataResponse>(`/(api)/doctor/${user?.id}`);
-
-  const doctorData = doctorDataResponse?.data;
+  const [loading, setLoading] = useState(true);
+  const [doctorProfile, setDoctorProfile] = useState<any>(null);
+  
+  const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
-    if (doctorData) {
-      setIsAvailable(doctorData.isAvailable || false);
+    const initialize = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permissão negada', 'Precisamos da sua localização para receber chamados.');
+        return;
+      }
 
-      fetchAPI(`/(api)/doctor/stats/${user?.id}`)
-        .then((response) => {
-          if (response.data) {
-            setStats(response.data);
-          }
-        })
-        .catch((error) => console.error('Error fetching stats:', error));
-    }
-  }, [doctorData, user?.id]);
-
-  const handleSignOut = () => {
-    signOut();
-    router.replace('/(auth)/sign-in');
-  };
-
-  const toggleAvailability = async () => {
-    try {
-      const newAvailability = !isAvailable;
-      setIsAvailable(newAvailability);
-
-      await fetchAPI(`/(api)/doctor/${user?.id}/toggle-availability`, {
-        method: 'POST',
-        body: JSON.stringify({ isAvailable: newAvailability }),
+      let location = await Location.getCurrentPositionAsync({});
+      const address = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
       });
 
-      refetch();
+      setUserLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        address: `${address[0].name}, ${address[0].region}`,
+      });
+
+      // Fetch doctor profile to get availability status
+      try {
+        if (user?.emailAddresses[0]?.emailAddress) {
+           const res = await fetchAPI(`/doctor/check?email=${encodeURIComponent(user.emailAddresses[0].emailAddress)}`);
+           if (res.success && res.data) {
+             setDoctorProfile(res.data);
+             setIsAvailable(res.data.isAvailable);
+
+             // Connect to WebSocket
+             if (res.data.id) {
+               const socket = connectSocket(res.data.id, 'doctor');
+               
+               socket.on('consultation:new', (data: any) => {
+                 Alert.alert(
+                   'Nova Solicitação',
+                   `Paciente ${data.patientName} solicitou atendimento próximo a você.`,
+                   [
+                     {
+                       text: 'Ver Detalhes',
+                       onPress: () => router.push('/(doctor)/consultation-requests'),
+                     },
+                     {
+                       text: 'Ignorar',
+                       style: 'cancel',
+                     },
+                   ]
+                 );
+               });
+             }
+           }
+        }
+      } catch (error) {
+        console.error("Error fetching doctor profile", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initialize();
+
+    return () => {
+      disconnectSocket();
+    };
+  }, [user]);
+
+  const toggleAvailability = async () => {
+    const newValue = !isAvailable;
+    setIsAvailable(newValue);
+    
+    try {
+      if (doctorProfile?.id) {
+        await fetchAPI(`/doctor/${doctorProfile.id}/toggle-availability`, {
+          method: 'PUT',
+          body: JSON.stringify({ isAvailable: newValue }),
+        });
+      }
     } catch (error) {
-      console.error('Error toggling availability:', error);
-      // Reverter em caso de falha
-      setIsAvailable(!isAvailable);
+      console.error("Error toggling availability", error);
+      setIsAvailable(!newValue); // Revert on error
+      Alert.alert("Erro", "Não foi possível atualizar sua disponibilidade.");
     }
   };
 
-  const navigateToAvailability = () => {
-    router.navigate({
-      pathname: '/(doctor)/availability',
-    } as any);
-  };
-
-  if (loading) {
+  if (loading || !userLatitude || !userLongitude) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-general-500">
-        <ActivityIndicator size="large" color="#0286FF" />
-      </SafeAreaView>
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#4C7C68" />
+      </View>
     );
   }
 
-  const formatTime = (dateString?: string) => {
-    if (!dateString) return 'Horário não definido';
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   return (
-    <SafeAreaView className="flex-1 bg-general-500">
-      <ScrollView className="p-5">
-        <View className="my-5 flex flex-row items-center justify-between">
-          <Text className="font-JakartaExtraBold text-2xl capitalize">
-            Bem vindo, Dr. {user?.firstName || 'Médico'}
-          </Text>
-          <TouchableOpacity
-            onPress={handleSignOut}
-            className="h-10 w-10 items-center justify-center rounded-full bg-white">
-            <Image source={icons.out} className="h-6 w-6" />
-          </TouchableOpacity>
-        </View>
+    <View className="flex-1 bg-white">
+      <View className="flex-1">
+        <MapView
+          ref={mapRef}
+          provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
+          className="h-full w-full"
+          showsUserLocation={true}
+          userInterfaceStyle="light"
+          initialRegion={{
+            latitude: userLatitude || 0,
+            longitude: userLongitude || 0,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
+        />
 
-        <View className="mb-5 rounded-xl bg-white p-4 shadow-sm">
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Text className="font-JakartaSemiBold text-lg">Status</Text>
-              <Text className="mt-1 font-JakartaMedium text-gray-500">
-                {isAvailable
-                  ? 'Você está disponível para receber consultas'
-                  : 'Você está indisponível para consultas'}
-              </Text>
-            </View>
-            <Switch
-              trackColor={{ false: '#E0E0E0', true: '#ADE5B9' }}
-              thumbColor={isAvailable ? '#38A169' : '#999999'}
-              onValueChange={toggleAvailability}
-              value={isAvailable}
-            />
-          </View>
-
-          <TouchableOpacity
-            onPress={navigateToAvailability}
-            className="mt-3 flex-row items-center rounded-lg bg-gray-100 p-3">
-            <Image source={icons.map} className="mr-2 h-5 w-5" />
-            <Text className="font-JakartaMedium">Configurar disponibilidade</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text className="mb-3 font-JakartaBold text-xl">Resumo</Text>
-        <View className="mb-5 flex-row flex-wrap justify-between">
-          <View className="mb-3 w-[48%] rounded-xl bg-white p-4 shadow-sm">
-            <Text className="font-JakartaMedium text-gray-500">Consultas pendentes</Text>
-            <Text className="mt-1 font-JakartaBold text-2xl">{stats.pendingConsultations}</Text>
-          </View>
-
-          <View className="mb-3 w-[48%] rounded-xl bg-white p-4 shadow-sm">
-            <Text className="font-JakartaMedium text-gray-500">Consultas hoje</Text>
-            <Text className="mt-1 font-JakartaBold text-2xl">{stats.todayConsultations}</Text>
-          </View>
-
-          <View className="w-[48%] rounded-xl bg-white p-4 shadow-sm">
-            <Text className="font-JakartaMedium text-gray-500">Ganhos totais</Text>
-            <Text className="mt-1 font-JakartaBold text-2xl">R$ {stats.totalEarnings}</Text>
-          </View>
-
-          <View className="w-[48%] rounded-xl bg-white p-4 shadow-sm">
-            <Text className="font-JakartaMedium text-gray-500">Avaliação</Text>
-            <View className="mt-1 flex-row items-center">
-              <Text className="mr-1 font-JakartaBold text-2xl">{stats.rating.toFixed(1)}</Text>
-              <Image source={icons.star} className="h-5 w-5" />
-            </View>
-          </View>
-        </View>
-
-        <Text className="mb-3 font-JakartaBold text-xl">Sua Localização</Text>
-        <View className="mb-5 h-[300px] overflow-hidden rounded-xl">
-          <Map />
-        </View>
-
-        <Text className="mb-3 font-JakartaBold text-xl">Próximas Consultas</Text>
-        {doctorData?.upcomingConsultations && doctorData.upcomingConsultations.length > 0 ? (
-          doctorData.upcomingConsultations.map((consultation: ConsultationDetails) => (
-            <TouchableOpacity
-              key={consultation.consultationId}
-              onPress={() =>
-                router.navigate({
-                  pathname: '/(doctor)/consultation/[id]',
-                  params: { id: consultation.consultationId },
-                } as any)
-              }
-              className="mb-3 rounded-xl bg-white p-4 shadow-sm">
-              <View className="flex-row items-center justify-between">
-                <Text className="font-JakartaSemiBold">{consultation.patient.name}</Text>
-                <Text className="font-JakartaSemiBold text-primary-500">
-                  {formatTime(consultation.scheduledTime)}
+        {/* Header Overlay */}
+        <SafeAreaView className="absolute top-0 w-full px-5">
+          <View className="flex flex-row items-center justify-between rounded-2xl bg-white p-4 shadow-md shadow-neutral-200">
+            <View className="flex flex-row items-center">
+              <View className="h-12 w-12 items-center justify-center rounded-full bg-gray-100 overflow-hidden">
+                <Image
+                  source={{ uri: user?.imageUrl || 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80' }}
+                  className="h-full w-full"
+                />
+              </View>
+              <View className="ml-3">
+                <Text className="font-JakartaSemiBold text-lg text-gray-900">
+                  Olá, Dr. {user?.firstName}
+                </Text>
+                <Text className={`text-sm font-JakartaMedium ${isAvailable ? 'text-green-500' : 'text-gray-500'}`}>
+                  {isAvailable ? '● Online' : '○ Offline'}
                 </Text>
               </View>
-              <Text className="mt-1 text-gray-500">
-                {consultation.complaint.substring(0, 50)}...
-              </Text>
-            </TouchableOpacity>
-          ))
-        ) : (
-          <View className="items-center justify-center rounded-xl bg-white p-5">
-            <Image source={images.noResult} className="h-40 w-40" />
-            <Text className="mt-2 text-gray-500">Nenhuma consulta agendada</Text>
+            </View>
+            
+            <View className="items-center">
+              <Switch
+                trackColor={{ false: '#767577', true: '#4C7C68' }}
+                thumbColor={isAvailable ? '#f4f3f4' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={toggleAvailability}
+                value={isAvailable}
+              />
+            </View>
           </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+        </SafeAreaView>
+
+        {/* Bottom Status Overlay */}
+        <View className="absolute bottom-24 w-full px-5">
+          <View className="rounded-2xl bg-white p-5 shadow-lg shadow-neutral-300">
+            <Text className="mb-2 font-JakartaBold text-xl text-gray-900">
+              {isAvailable ? 'Aguardando chamados...' : 'Você está offline'}
+            </Text>
+            <Text className="font-Jakarta text-gray-500">
+              {isAvailable 
+                ? 'Fique atento, novos pacientes podem solicitar atendimento a qualquer momento.' 
+                : 'Ative sua disponibilidade para começar a receber solicitações de consulta.'}
+            </Text>
+            
+            {isAvailable && (
+              <View className="mt-4 flex-row items-center justify-center">
+                <ActivityIndicator size="small" color="#4C7C68" className="mr-2" />
+                <Text className="text-primary-500 font-JakartaMedium">Procurando pacientes na região...</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+    </View>
   );
 };
 

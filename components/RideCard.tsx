@@ -1,12 +1,13 @@
 import { formatDate, formatTime } from 'lib/utils';
 import { Image, Text, View } from 'react-native';
 import { Ride } from 'types/type';
+import { shadows } from 'helpers/shadows';
 
 import { icons } from '../constants';
 
 const RideCard = ({ ride }: { ride: Ride }) => {
   return (
-    <View className="mb-3 flex flex-row items-center justify-center rounded-lg bg-white shadow-sm shadow-neutral-300">
+    <View className="mb-3 flex flex-row items-center justify-center rounded-lg bg-white" style={shadows.sm}>
       <View className="flex flex-col items-start justify-center p-3">
         <View className="flex flex-row items-center justify-between">
           <Image

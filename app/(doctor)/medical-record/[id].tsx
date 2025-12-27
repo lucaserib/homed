@@ -12,6 +12,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { shadows } from 'helpers/shadows';
 
 import {
   ConsultationDetails,
@@ -25,7 +26,7 @@ const PatientInfoCard = ({
   patient: { name: string };
   consultation: { startTime?: string; scheduledTime?: string; complaint: string };
 }) => (
-  <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+  <View className="mb-5 rounded-xl bg-white p-5" style={shadows.sm}>
     <Text className="mb-3 font-JakartaBold text-xl">Informações do Paciente</Text>
 
     <View className="mb-2">
@@ -190,7 +191,7 @@ const MedicalRecordScreen = () => {
         <PatientInfoCard patient={consultation.patient} consultation={consultation} />
 
         {/* Avaliação Médica */}
-        <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+        <View className="mb-5 rounded-xl bg-white p-5" style={shadows.sm}>
           <Text className="mb-3 font-JakartaBold text-xl">Avaliação Médica</Text>
 
           <EditableField
@@ -216,7 +217,7 @@ const MedicalRecordScreen = () => {
         </View>
 
         {/* Histórico Médico */}
-        <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
+        <View className="mb-5 rounded-xl bg-white p-5" style={shadows.sm}>
           <Text className="mb-3 font-JakartaBold text-xl">Histórico do Paciente</Text>
 
           <EditableField

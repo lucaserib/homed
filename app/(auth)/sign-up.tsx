@@ -2,14 +2,13 @@ import { useSignUp } from '@clerk/clerk-expo';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomButton from 'components/CustomButton';
 import InputField from 'components/InputField';
-import OAuth from 'components/OAuth';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as ImagePicker from 'expo-image-picker';
 import { Link, router } from 'expo-router';
 import { fetchAPI } from 'lib/fetch';
 import { maskCPF } from 'lib/mask';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Text,
   ScrollView,
@@ -25,7 +24,7 @@ import ReactNativeModal from 'react-native-modal';
 import { icons, images } from '../../constants';
 
 const SignUp = () => {
-  const { isLoaded, signUp, setActive } = useSignUp();
+  const { isLoaded, signUp } = useSignUp();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -49,6 +48,53 @@ const SignUp = () => {
     error: '',
     code: '',
   });
+
+  const handleNameChange = useCallback((value: string) => {
+    setForm(prev => ({ ...prev, name: value }));
+    if (errors.name) {
+      setErrors(prev => ({ ...prev, name: '' }));
+    }
+  }, [errors.name]);
+
+  const handleEmailChange = useCallback((value: string) => {
+    setForm(prev => ({ ...prev, email: value }));
+    if (errors.email) {
+      setErrors(prev => ({ ...prev, email: '' }));
+    }
+  }, [errors.email]);
+
+  const handlePasswordChange = useCallback((value: string) => {
+    setForm(prev => ({ ...prev, password: value }));
+    if (errors.password) {
+      setErrors(prev => ({ ...prev, password: '' }));
+    }
+  }, [errors.password]);
+
+  const handlePhoneChange = useCallback((value: string) => {
+    setForm(prev => ({ ...prev, phone: value }));
+    if (errors.phone) {
+      setErrors(prev => ({ ...prev, phone: '' }));
+    }
+  }, [errors.phone]);
+
+  const handleAddressChange = useCallback((value: string) => {
+    setForm(prev => ({ ...prev, address: value }));
+    if (errors.address) {
+      setErrors(prev => ({ ...prev, address: '' }));
+    }
+  }, [errors.address]);
+
+  const handleCpfChange = useCallback((value: string) => {
+    const maskedValue = maskCPF(value);
+    setForm(prev => ({ ...prev, cpf: maskedValue }));
+    if (errors.cpf) {
+      setErrors(prev => ({ ...prev, cpf: '' }));
+    }
+  }, [errors.cpf]);
+
+  const handleVerificationCodeChange = useCallback((code: string) => {
+    setVerification(prev => ({ ...prev, code, error: '' }));
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -138,7 +184,6 @@ const SignUp = () => {
     });
 
     if (!result.canceled && result.assets && result.assets[0]) {
-      setProfileImage(result.assets[0].uri);
       const base64 = result.assets[0].base64;
       if (base64) {
         setProfileImage(`data:image/jpeg;base64,${base64}`);
@@ -157,19 +202,25 @@ const SignUp = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('🚀 Iniciando registro de paciente...');
+
       await signUp.create({
         emailAddress: form.email,
         password: form.password,
       });
 
+      console.log('📧 Preparando envio de código de verificação...');
+
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+
+      console.log('✅ Código de verificação enviado para:', form.email);
 
       setVerification({
         ...verification,
         state: 'pending',
       });
     } catch (err: any) {
-      console.log(err);
+      console.error('❌ Erro ao criar conta:', err);
       Alert.alert('Erro', err.errors?.[0]?.longMessage || 'Erro ao criar conta');
     } finally {
       setIsSubmitting(false);
@@ -188,55 +239,57 @@ const SignUp = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('🔐 Iniciando verificação de email...');
+
       const completeSignUp = await signUp.attemptEmailAddressVerification({
         code: verification.code,
       });
 
-      if (completeSignUp.status === 'complete') {
-        const { createdSessionId, createdUserId } = completeSignUp;
-
-        const formattedDate = form.dateOfBirth.toISOString();
-
-        let imageUrl = null;
-        if (profileImage) {
-          const uploadResponse = await fetchAPI('/(api)/upload/image', {
-            method: 'POST',
-            body: JSON.stringify({
-              image: profileImage,
-              folder: 'patients',
-              publicId: `patient_${createdUserId}`,
-            }),
-          });
-
-          if (uploadResponse.success) {
-            imageUrl = uploadResponse.imageUrl;
-          }
-        }
-
-        await fetchAPI('/(api)/user', {
-          method: 'POST',
-          body: JSON.stringify({
-            name: form.name,
-            email: form.email,
-            phone: form.phone,
-            clerkId: createdUserId,
-            dateOfBirth: formattedDate,
-            gender: form.gender,
-            cpf: form.cpf.replace(/[^\d]/g, ''),
-            address: form.address,
-            profileImageUrl: imageUrl,
-          }),
-        });
-
-        await setActive({ session: createdSessionId });
-        setVerification({ ...verification, state: 'success' });
-      } else {
-        setVerification({ ...verification, error: 'Verificação falhou', state: 'failed' });
+      if (completeSignUp.status !== 'complete') {
+        setVerification({ ...verification, error: 'Código de verificação inválido', state: 'failed' });
+        setIsSubmitting(false);
+        return;
       }
+
+      const { createdUserId } = completeSignUp;
+      console.log('✅ Verificação completa. Clerk User ID:', createdUserId);
+
+      console.log('📝 Criando paciente no banco de dados...');
+
+      await fetchAPI('/auth/register/patient', {
+        method: 'POST',
+        body: JSON.stringify({
+          clerkId: createdUserId,
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          dateOfBirth: form.dateOfBirth.toISOString(),
+          gender: form.gender,
+          cpf: form.cpf,
+          address: form.address,
+          profileImageUrl: profileImage,
+        }),
+      });
+
+      console.log('✅ Paciente criado no banco com status PENDING!');
+
+      setVerification({ ...verification, state: 'success' });
+      setShowSuccessModal(true);
     } catch (err: any) {
+      console.error('❌ Erro no registro:', err);
+
+      let message = 'Erro de verificação';
+      if (err.status === 409 || err.message?.includes('Conflict')) {
+        message = 'Esta conta já está registrada como Médico. Por favor, use outro email ou entre em contato com o suporte.';
+      } else if (err.errors?.[0]?.longMessage) {
+        message = err.errors[0].longMessage;
+      } else if (err.message) {
+        message = err.message;
+      }
+
       setVerification({
         ...verification,
-        error: err.errors?.[0]?.longMessage || 'Erro de verificação',
+        error: message,
         state: 'failed',
       });
     } finally {
@@ -288,12 +341,7 @@ const SignUp = () => {
             placeholder="Digite seu nome completo"
             icon={icons.person}
             value={form.name}
-            onChangeText={(value) => {
-              setForm({ ...form, name: value });
-              if (errors.name) {
-                setErrors({ ...errors, name: '' });
-              }
-            }}
+            onChangeText={handleNameChange}
           />
           {errors.name ? <Text className="mt-1 text-sm text-danger-600">{errors.name}</Text> : null}
 
@@ -303,12 +351,7 @@ const SignUp = () => {
             placeholder="Digite seu Email"
             icon={icons.email}
             value={form.email}
-            onChangeText={(value) => {
-              setForm({ ...form, email: value });
-              if (errors.email) {
-                setErrors({ ...errors, email: '' });
-              }
-            }}
+            onChangeText={handleEmailChange}
             keyboardType="email-address"
             autoCapitalize="none"
           />
@@ -323,12 +366,7 @@ const SignUp = () => {
             icon={icons.lock}
             secureTextEntry
             value={form.password}
-            onChangeText={(value) => {
-              setForm({ ...form, password: value });
-              if (errors.password) {
-                setErrors({ ...errors, password: '' });
-              }
-            }}
+            onChangeText={handlePasswordChange}
           />
           {errors.password ? (
             <Text className="mt-1 text-sm text-danger-600">{errors.password}</Text>
@@ -340,12 +378,7 @@ const SignUp = () => {
             placeholder="Digite seu telefone"
             icon={icons.phone}
             value={form.phone}
-            onChangeText={(value) => {
-              setForm({ ...form, phone: value });
-              if (errors.phone) {
-                setErrors({ ...errors, phone: '' });
-              }
-            }}
+            onChangeText={handlePhoneChange}
             keyboardType="phone-pad"
           />
           {errors.phone ? (
@@ -377,7 +410,6 @@ const SignUp = () => {
             )}
           </View>
 
-          {/* Gênero */}
           <View className="mb-3">
             <Text className="mb-1 font-JakartaSemiBold text-lg">Gênero</Text>
             <View className="flex-row space-x-3">
@@ -414,15 +446,9 @@ const SignUp = () => {
             placeholder="Digite seu CPF"
             icon={icons.document}
             value={form.cpf}
-            onChangeText={(value) => {
-              const maskedValue = maskCPF(value);
-              setForm({ ...form, cpf: maskedValue });
-              if (errors.cpf) {
-                setErrors({ ...errors, cpf: '' });
-              }
-            }}
+            onChangeText={handleCpfChange}
             keyboardType="numeric"
-            maxLength={14} // 11 dígitos + 3 caracteres de formatação
+            maxLength={14}
           />
           {errors.cpf ? <Text className="mt-1 text-sm text-danger-600">{errors.cpf}</Text> : null}
 
@@ -432,12 +458,7 @@ const SignUp = () => {
             placeholder="Digite seu endereço completo"
             icon={icons.marker}
             value={form.address}
-            onChangeText={(value) => {
-              setForm({ ...form, address: value });
-              if (errors.address) {
-                setErrors({ ...errors, address: '' });
-              }
-            }}
+            onChangeText={handleAddressChange}
           />
           {errors.address ? (
             <Text className="mt-1 text-sm text-danger-600">{errors.address}</Text>
@@ -449,8 +470,6 @@ const SignUp = () => {
             className="mt-6"
             disabled={isSubmitting}
           />
-
-          <OAuth />
 
           <Link href={'/(auth)/sign-in' as any} asChild>
             <Text className="mt-6 text-center text-lg text-general-700">
@@ -478,7 +497,7 @@ const SignUp = () => {
               placeholderTextColor="gray"
               value={verification.code}
               keyboardType="numeric"
-              onChangeText={(code) => setVerification({ ...verification, code, error: '' })}
+              onChangeText={handleVerificationCodeChange}
             />
 
             {verification.error && (
@@ -500,15 +519,19 @@ const SignUp = () => {
           <View className="min-h-[300px] rounded-2xl bg-white px-7 py-9">
             <Image source={images.check} className="mx-auto my-5 h-[110px] w-[110px]" />
 
-            <Text className="text-center font-JakartaExtraBold text-3xl">Verificado</Text>
+            <Text className="text-center font-JakartaExtraBold text-3xl">Cadastro Enviado</Text>
 
             <Text className="mt-2 text-center font-Jakarta text-base text-gray-400">
-              Sua conta foi verificada com sucesso.
+              Seu cadastro foi enviado com sucesso e está em análise pela nossa equipe. Você
+              receberá um email quando sua conta for aprovada.
             </Text>
 
             <CustomButton
-              title="Ir para Página Principal"
-              onPress={() => router.replace('/(root)/(tabs)/home')}
+              title="Voltar para Login"
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.replace('/(auth)/sign-in');
+              }}
               className="mt-5"
             />
           </View>

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Image, Text, View, TextInput, FlatList, TouchableOpacity } from 'react-native';
 import { GoogleInputProps } from 'types/type';
+import { shadows } from 'helpers/shadows';
 
 import { icons } from '../constants';
 import { fetchAPI } from '../lib/fetch';
@@ -79,16 +80,16 @@ const GoogleTextInput = ({
   };
 
   return (
-    <View className={`relative z-50 ${containerStyle} mb-5`}>
-      <View className="mx-5 flex flex-row items-center justify-center rounded-xl bg-white shadow-md shadow-neutral-300">
+    <View className={`relative ${containerStyle}`}>
+      <View className="flex flex-row items-center justify-center">
         <View className="ml-4 h-6 w-6 items-center justify-center">
           <Image source={icon ? icon : icons.search} className="h-6 w-6" resizeMode="contain" />
         </View>
 
         <TextInput
-          className="flex-1 rounded-r-xl px-4 py-4 font-Jakarta text-base"
+          className="flex-1 px-4 py-4 font-JakartaMedium text-base text-gray-900"
           placeholder={initialLocation ?? 'Para onde deseja ir?'}
-          placeholderTextColor="gray"
+          placeholderTextColor="#9CA3AF"
           value={input}
           onChangeText={handleInputChange}
           style={{ backgroundColor: textInputBackgroundColor }}
@@ -96,18 +97,27 @@ const GoogleTextInput = ({
       </View>
 
       {showResults && predictions.length > 0 && (
-        <View className="absolute left-5 right-5 top-16 z-50 max-h-60 rounded-xl bg-white shadow-lg">
+        <View
+          className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 rounded-xl border border-gray-200 bg-white"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+          }}>
           <FlatList
             data={predictions}
             keyExtractor={(item) => item.place_id}
             renderItem={({ item }) => (
               <TouchableOpacity
-                className="border-b border-gray-200 px-4 py-3"
-                onPress={() => handleSelectPrediction(item)}>
-                <Text className="font-JakartaSemiBold text-base">
+                className="border-b border-gray-100 px-4 py-3"
+                onPress={() => handleSelectPrediction(item)}
+                activeOpacity={0.7}>
+                <Text className="font-JakartaSemiBold text-sm text-gray-900">
                   {item.structured_formatting.main_text}
                 </Text>
-                <Text className="font-Jakarta text-sm text-gray-500">
+                <Text className="font-JakartaMedium text-xs text-gray-500 mt-0.5">
                   {item.structured_formatting.secondary_text}
                 </Text>
               </TouchableOpacity>
@@ -119,8 +129,16 @@ const GoogleTextInput = ({
       )}
 
       {loading && (
-        <View className="absolute left-5 right-5 top-16 z-50 rounded-xl bg-white p-4 shadow-lg">
-          <Text className="text-center text-gray-500">Buscando...</Text>
+        <View
+          className="absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-gray-200 bg-white p-4"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+          }}>
+          <Text className="text-center font-JakartaMedium text-sm text-gray-500">Buscando...</Text>
         </View>
       )}
     </View>

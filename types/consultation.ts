@@ -27,7 +27,6 @@ export interface Doctor {
   rating?: number;
   notifications?: number;
   clerkid?: string;
-  // Nome completo calculado para exibição
   get name(): string;
 }
 
@@ -46,6 +45,8 @@ export interface ConsultationDetails {
   doctor?: Doctor;
   status: ConsultationStatus;
   originAddress: string;
+  originLatitude: number;
+  originLongitude: number;
   destinationAddress?: string;
   complaint: string;
   scheduledTime?: string;

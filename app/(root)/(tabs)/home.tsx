@@ -1,134 +1,190 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import GoogleTextInput from 'components/GoogleTextInput';
-import Map from 'components/Map';
-import RideCard from 'components/RideCard';
-import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { useFetch } from 'lib/fetch';
-import { useEffect, useState } from 'react';
+import { useFetch } from '../../../lib/fetch';
+import LocationService from '../../../services/LocationService';
+import { useEffect, useState, useRef } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  SafeAreaView,
-  Text,
-  TouchableOpacity,
   View,
+  Text,
+  Image,
+  TouchableOpacity,
+  Platform,
+  StyleSheet,
+  Dimensions,
 } from 'react-native';
-import { useLocationStore } from 'store';
-import { Ride } from 'types/type';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { useLocationStore } from '../../../store';
+import { ConsultationDetails } from '../../../types/consultation';
+import HomeHeader from '../../../components/HomeHeader';
+import CustomButton from '../../../components/CustomButton';
+import GoogleTextInput from '../../../components/GoogleTextInput';
+import { images, icons } from '../../../constants';
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import ConsultationSummaryCard from '../../../components/ConsultationSummaryCard';
+import LoadingScreen from '../../../components/LoadingScreen';
+import EmptyState from '../../../components/EmptyState';
 
-import { icons, images } from '../../../constants';
+const { width, height } = Dimensions.get('window');
 
 export default function Page() {
-  const { setUserLocation, setDestinationLocation } = useLocationStore();
+  const { userAddress, userLatitude, userLongitude, setUserLocation } = useLocationStore();
   const { user } = useUser();
-  const { data: recentRides, loading } = useFetch<Ride[]>(`/(api)/ride/${user?.id}`);
-  const [hasPermissions, setHasPermissions] = useState(false);
+  const {
+    data: recentConsultations,
+    loading,
+    refetch,
+  } = useFetch<ConsultationDetails[]>(user?.id ? `/consultations/patient/${user.id}` : null);
   const { signOut } = useAuth();
+  const mapRef = useRef<MapView>(null);
+
   const handleSignOut = () => {
     signOut();
-
     router.replace('/(auth)/sign-in');
   };
 
-  const handleDestinationPress = (location: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => {
-    setDestinationLocation(location);
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
-    router.push({
-      pathname: '/(root)/find-ride',
-    } as any);
+  const handleUseCurrentLocation = async () => {
+    setLoadingLocation(true);
+    try {
+      const locationService = LocationService.getInstance();
+      const location = await locationService.getCurrentLocationWithFallback();
+      setUserLocation(location);
+    } catch (error) {
+      console.error('Erro ao obter localização:', error);
+      alert('Não foi possível obter sua localização. Por favor, digite o endereço manualmente.');
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  const handleRequestConsultation = () => {
+    if (!userAddress) {
+      alert('Por favor, selecione um endereço para o atendimento');
+      return;
+    }
+    router.push('/(root)/request-consultation' as any);
   };
 
   useEffect(() => {
     const requestLocation = async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-
-      if (status !== 'granted') {
-        setHasPermissions(false);
-        return;
+      try {
+        const locationService = LocationService.getInstance();
+        const location = await locationService.getCurrentLocationWithFallback();
+        setUserLocation(location);
+      } catch (error) {
+        console.error('Erro ao obter localização:', error);
+        const locationService = LocationService.getInstance();
+        const fallbackLocation = locationService.getFallbackLocation();
+        setUserLocation(fallbackLocation);
       }
-
-      const location = await Location.getCurrentPositionAsync();
-
-      const address = await Location.reverseGeocodeAsync({
-        latitude: location.coords?.latitude!,
-        longitude: location.coords?.longitude!,
-      });
-
-      setUserLocation({
-        latitude: location.coords?.latitude,
-        longitude: location.coords?.longitude,
-        // latitude: -20.2834,
-        // longitude: -50.2466,
-        address: `${address[0].name}, ${address[0].region}`,
-      });
     };
+
     requestLocation();
   }, []);
 
+  useEffect(() => {
+    if (userLatitude && userLongitude && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: userLatitude,
+        longitude: userLongitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
+  }, [userLatitude, userLongitude]);
+
+  const userName =
+    user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split('@')?.[0] || 'Usuário';
+
   return (
-    <SafeAreaView className="h-full bg-general-500">
-      <FlatList
-        data={recentRides?.slice(0, 5) || []}
-        renderItem={({ item }) => <RideCard ride={item} />}
-        className="px-5"
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingBottom: 100,
-        }}
-        ListEmptyComponent={() => (
-          <View className="flex flex-col items-center justify-center">
-            {!loading ? (
-              <>
-                <Image
-                  source={images.noResult}
-                  className="h-40 w-40"
-                  alt="Nenhuma corrida encontrada."
-                  resizeMode="contain"
-                />
-                <Text className="text-sm">Nenhuma corrida recente encontrada</Text>
-              </>
-            ) : (
-              <ActivityIndicator size="small" color="#000" />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View className="flex-1 bg-white">
+        <View className="absolute top-0 left-0 right-0 bottom-0">
+          <MapView
+            ref={mapRef}
+            provider={PROVIDER_GOOGLE}
+            style={{ flex: 1 }}
+            initialRegion={{
+              latitude: userLatitude || -23.55052,
+              longitude: userLongitude || -46.633308,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+            showsUserLocation={true}
+            showsMyLocationButton={false}
+          >
+            {userLatitude && userLongitude && (
+              <Marker
+                coordinate={{
+                  latitude: userLatitude,
+                  longitude: userLongitude,
+                }}
+                title="Sua localização"
+              >
+                <Image source={icons.pin} className="w-10 h-10" resizeMode="contain" />
+              </Marker>
             )}
+          </MapView>
+        </View>
+
+        <SafeAreaView className="flex-1" pointerEvents="box-none">
+          <View className="px-5 pt-2">
+            <HomeHeader userName={userName} onSignOut={handleSignOut} />
           </View>
-        )}
-        ListHeaderComponent={() => (
-          <>
-            <View className="my-5 flex flex-row items-center justify-between">
-              <Text className="font-JakartaExtraBold text-2xl capitalize">
-                Bem vindo,{' '}
-                {user?.firstName || user?.emailAddresses[0].emailAddress.split('@')[0]}{' '}
-              </Text>
-              <TouchableOpacity
-                onPress={handleSignOut}
-                className="h-10 w-10 items-center justify-center rounded-full bg-white">
-                <Image source={icons.out} className="h-6 w-6" />
-              </TouchableOpacity>
-            </View>
 
-            <GoogleTextInput
-              icon={icons.search}
-              containerStyle="bg-white shadow-md shadow-neutral-300"
-              handlePress={handleDestinationPress}
-            />
-
-            <>
-              <Text className="mb-3 mt-5 font-JakartaBold text-xl">Sua Localização atual</Text>
-              <View className=" flex h-[300px] flex-row items-center bg-transparent">
-                <Map />
+          <View className="flex-1 justify-end pb-24 px-5" pointerEvents="box-none">
+            <View
+              className="rounded-3xl bg-white p-5 shadow-lg shadow-black/10"
+              style={{ elevation: 5 }}
+            >
+              <View className="mb-4 flex-row items-center">
+                <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary-500">
+                  <Image source={icons.home} className="h-6 w-6" tintColor="#FFFFFF" />
+                </View>
+                <View className="ml-3 flex-1">
+                  <Text className="font-JakartaBold text-lg text-gray-900">
+                    Solicitar Atendimento
+                  </Text>
+                  <Text className="mt-0.5 font-JakartaMedium text-xs text-gray-600">
+                    Médico até você em minutos
+                  </Text>
+                </View>
               </View>
-            </>
 
-            <Text className="mb-3 mt-5 font-JakartaBold text-xl">Corridas Recentes</Text>
-          </>
-        )}
-      />
-    </SafeAreaView>
+              <View className="mb-4">
+                <GoogleTextInput
+                  icon={icons.pin}
+                  initialLocation={userAddress || 'Onde você precisa de atendimento?'}
+                  containerStyle="bg-gray-50 border border-gray-100"
+                  textInputBackgroundColor="transparent"
+                  handlePress={(location) => setUserLocation(location)}
+                />
+
+                <TouchableOpacity
+                  onPress={handleUseCurrentLocation}
+                  disabled={loadingLocation}
+                  className="mt-3 flex-row items-center"
+                >
+                  <Image source={icons.target} className="mr-2 h-4 w-4" tintColor="#4C7C68" />
+                  <Text className="font-JakartaSemiBold text-sm text-primary-700">
+                    {loadingLocation ? 'Buscando...' : 'Usar localização atual'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <CustomButton
+                title="Continuar"
+                onPress={handleRequestConsultation}
+                className="w-full"
+                disabled={!userAddress || loadingLocation}
+              />
+            </View>
+          </View>
+        </SafeAreaView>
+      </View>
+    </GestureHandlerRootView>
   );
 }

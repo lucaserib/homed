@@ -25,7 +25,7 @@ const ConfirmRide = () => {
               title="Escolha a corrida"
               onPress={() =>
                 router.push({
-                  pathname: '/(root)/book-ride',
+                  pathname: '/(root)/confirm-consultation',
                 } as any)
               }
             />

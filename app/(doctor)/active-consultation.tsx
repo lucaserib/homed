@@ -10,8 +10,11 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Linking,
+  Platform,
 } from 'react-native';
 import ReactNativeModal from 'react-native-modal';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { icons } from '../../constants';
 import { fetchAPI } from '../../lib/fetch';
@@ -65,31 +68,45 @@ const ConsultationTimer: React.FC<ConsultationTimerProps> = ({
   };
 
   return (
-    <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-      <Text className="mb-2 text-center font-JakartaBold text-xl">Tempo de Consulta</Text>
+    <View
+      className="mb-5 rounded-2xl bg-white p-5 border border-gray-100"
+      style={{
+        shadowColor: '#4C7C68',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 4,
+      }}>
+      <Text className="mb-2 text-center font-JakartaBold text-lg text-gray-500 uppercase tracking-wider">Tempo de Consulta</Text>
 
-      <Text className="mb-3 text-center font-JakartaSemiBold text-3xl">
+      <Text className="mb-2 text-center font-JakartaExtraBold text-4xl text-primary-700">
         {formatTime(elapsedTime)}
       </Text>
 
-      <Text className="mb-5 text-center font-JakartaMedium">
-        Valor estimado: R$ {estimatedCost.toFixed(2)}
+      <Text className="mb-6 text-center font-JakartaMedium text-gray-600 bg-gray-50 py-2 px-4 rounded-full self-center overflow-hidden">
+        Valor estimado: <Text className="font-JakartaBold text-gray-900">R$ {estimatedCost.toFixed(2)}</Text>
       </Text>
 
-      <View className="flex-row justify-between">
+      <View className="flex-row justify-between gap-3">
         <TouchableOpacity
           onPress={togglePause}
-          className={`mr-2 flex-1 rounded-full px-5 py-3 ${isPaused ? 'bg-primary-500' : 'bg-gray-300'}`}>
+          className={`flex-1 rounded-xl py-3.5 border-2 ${
+            isPaused
+              ? 'bg-primary-500 border-primary-500'
+              : 'bg-white border-gray-200'
+          }`}>
           <Text
-            className={`text-center font-JakartaBold ${isPaused ? 'text-white' : 'text-gray-700'}`}>
+            className={`text-center font-JakartaBold text-base ${
+              isPaused ? 'text-white' : 'text-gray-700'
+            }`}>
             {isPaused ? 'Continuar' : 'Pausar'}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={onFinish}
-          className="flex-1 rounded-full bg-success-500 px-5 py-3">
-          <Text className="text-center font-JakartaBold text-white">Finalizar</Text>
+          className="flex-1 rounded-xl bg-success-500 py-3.5 border-2 border-success-500 shadow-sm">
+          <Text className="text-center font-JakartaBold text-base text-white">Finalizar</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -194,151 +211,223 @@ const ActiveConsultation: React.FC = () => {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-general-500">
-        <ActivityIndicator size="large" color="#0286FF" />
-      </View>
+      <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center">
+        <ActivityIndicator size="large" color="#4C7C68" />
+      </SafeAreaView>
     );
   }
 
   if (!consultation) {
     return (
-      <View className="flex-1 items-center justify-center bg-general-500 p-5">
-        <Text className="mb-4 text-center font-JakartaSemiBold text-lg">
+      <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center p-5">
+        <Image source={icons.close} className="h-16 w-16 mb-4" tintColor="#9CA3AF" />
+        <Text className="mb-4 text-center font-JakartaSemiBold text-lg text-gray-600">
           Consulta não encontrada ou não disponível
         </Text>
         <TouchableOpacity
           onPress={() => router.back()}
-          className="rounded-full bg-primary-500 px-5 py-3">
+          className="rounded-full bg-primary-500 px-8 py-3 shadow-md">
           <Text className="font-JakartaBold text-white">Voltar</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-general-500 p-5">
-      <View className="mb-5 flex-row items-center">
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <Image source={icons.backArrow} className="h-6 w-6" />
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+      <View className="flex-row items-center px-5 py-4 bg-white border-b border-gray-100">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4 p-2 bg-gray-50 rounded-xl">
+          <Image source={icons.backArrow} className="h-5 w-5" />
         </TouchableOpacity>
-        <Text className="font-JakartaBold text-2xl">Consulta em Andamento</Text>
+        <Text className="font-JakartaBold text-xl text-gray-900">Consulta em Andamento</Text>
       </View>
 
-      {consultation.startTime && (
-        <ConsultationTimer
-          startTime={consultation.startTime}
-          hourlyRate={consultation.doctor?.hourlyRate || 150}
-          onFinish={handleFinishPress}
-        />
-      )}
-
-      <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-        <Text className="mb-3 font-JakartaBold text-xl">Informações do Paciente</Text>
-
-        <View className="mb-2">
-          <Text className="font-JakartaMedium text-gray-500">Nome</Text>
-          <Text className="font-JakartaSemiBold text-lg">{consultation.patient.name}</Text>
-        </View>
-
-        <View className="mb-2">
-          <Text className="font-JakartaMedium text-gray-500">Endereço</Text>
-          <Text className="font-Jakarta">{consultation.originAddress}</Text>
-        </View>
-
-        <TouchableOpacity
-          onPress={() =>
-            router.navigate({
-              pathname: '/(doctor)/(tabs)/chat',
-              params: { consultationId: consultation.consultationId },
-            } as any)
-          }
-          className="mt-2 flex-row items-center justify-center rounded-full bg-primary-500 px-5 py-3">
-          <Image source={icons.chat} className="mr-2 h-5 w-5" tintColor="white" />
-          <Text className="font-JakartaBold text-white">Chat com Paciente</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-        <Text className="mb-3 font-JakartaBold text-xl">Queixa do Paciente</Text>
-        <Text className="font-Jakarta">{consultation.complaint}</Text>
-      </View>
-
-      <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-        <Text className="mb-3 font-JakartaBold text-xl">Prontuário</Text>
-
-        <View className="mb-4">
-          <Text className="mb-2 font-JakartaSemiBold">Diagnóstico</Text>
-          <TextInput
-            className="rounded-lg bg-gray-100 p-3 font-Jakarta"
-            placeholder="Digite o diagnóstico"
-            value={diagnosis}
-            onChangeText={setDiagnosis}
-            multiline
-            numberOfLines={3}
+      <ScrollView className="flex-1 px-5 pt-5" contentContainerStyle={{ paddingBottom: 40 }}>
+        {consultation.startTime && (
+          <ConsultationTimer
+            startTime={consultation.startTime}
+            hourlyRate={consultation.doctor?.hourlyRate || 150}
+            onFinish={handleFinishPress}
           />
-        </View>
-
-        <View className="mb-4">
-          <Text className="mb-2 font-JakartaSemiBold">Tratamento</Text>
-          <TextInput
-            className="rounded-lg bg-gray-100 p-3 font-Jakarta"
-            placeholder="Digite o tratamento recomendado"
-            value={treatment}
-            onChangeText={setTreatment}
-            multiline
-            numberOfLines={3}
-          />
-        </View>
-
-        <View className="mb-4">
-          <Text className="mb-2 font-JakartaSemiBold">Observações Adicionais</Text>
-          <TextInput
-            className="rounded-lg bg-gray-100 p-3 font-Jakarta"
-            placeholder="Digite observações adicionais (opcional)"
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={4}
-          />
-        </View>
-      </View>
-
-      <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
-        <Text className="mb-3 font-JakartaBold text-xl">Ações</Text>
-
-        {consultation.status === 'in_progress' && (
-          <TouchableOpacity onPress={handleFinishPress} className="rounded-xl bg-success-500 p-3">
-            <Text className="text-center font-JakartaBold text-white">Finalizar Consulta</Text>
-          </TouchableOpacity>
         )}
-      </View>
+
+        <View className="mb-5 rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="font-JakartaBold text-lg text-gray-900">Paciente</Text>
+            <View className="bg-primary-50 px-3 py-1 rounded-full">
+              <Text className="text-xs font-JakartaBold text-primary-700">Em atendimento</Text>
+            </View>
+          </View>
+
+          <View className="flex-row items-center mb-4">
+            <View className="h-12 w-12 rounded-full bg-gray-200 items-center justify-center mr-4">
+               <Image source={icons.person} className="h-6 w-6" tintColor="#6B7280" />
+            </View>
+            <View>
+              <Text className="font-JakartaBold text-lg text-gray-900">{consultation.patient.name}</Text>
+              <Text className="font-JakartaMedium text-sm text-gray-500">Paciente</Text>
+            </View>
+          </View>
+
+          <View className="mb-4 bg-gray-50 p-3 rounded-xl">
+            <View className="flex-row items-start">
+              <Image source={icons.pin} className="h-4 w-4 mt-0.5 mr-2" tintColor="#4C7C68" />
+              <Text className="flex-1 font-JakartaMedium text-sm text-gray-700 leading-5">
+                {consultation.originAddress}
+              </Text>
+            </View>
+
+            <View className="mt-3 flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => {
+                  const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
+                  const latLng = `${consultation.originLatitude},${consultation.originLongitude}`;
+                  const label = consultation.originAddress;
+                  const url = Platform.select({
+                    ios: `${scheme}${label}@${latLng}`,
+                    android: `${scheme}${latLng}(${label})`
+                  });
+                  if (url) Linking.openURL(url);
+                }}
+                className="flex-1 flex-row items-center justify-center rounded-lg bg-blue-100 py-2">
+                <Image source={icons.map} className="mr-2 h-4 w-4" tintColor="#3B82F6" />
+                <Text className="font-JakartaSemiBold text-sm text-blue-600">Google Maps</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  const url = `waze://?ll=${consultation.originLatitude},${consultation.originLongitude}&navigate=yes`;
+                  Linking.openURL(url).catch(() => {
+                    Alert.alert('Erro', 'Waze não está instalado');
+                  });
+                }}
+                className="flex-1 flex-row items-center justify-center rounded-lg bg-blue-100 py-2">
+                <Image source={icons.map} className="mr-2 h-4 w-4" tintColor="#3B82F6" />
+                <Text className="font-JakartaSemiBold text-sm text-blue-600">Waze</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={() =>
+              router.navigate({
+                pathname: '/(doctor)/(tabs)/chat',
+                params: { consultationId: consultation.consultationId },
+              } as any)
+            }
+            className="flex-row items-center justify-center rounded-xl bg-primary-500 px-5 py-3.5 shadow-sm">
+            <Image source={icons.chat} className="mr-2 h-5 w-5" tintColor="white" />
+            <Text className="font-JakartaBold text-white text-base">Chat com Paciente</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View className="mb-5 rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
+          <View className="flex-row items-center mb-3">
+            <View className="h-8 w-8 rounded-lg bg-orange-50 items-center justify-center mr-3">
+              <Image source={icons.list} className="h-4 w-4" tintColor="#F97316" />
+            </View>
+            <Text className="font-JakartaBold text-lg text-gray-900">Queixa Principal</Text>
+          </View>
+          <Text className="font-JakartaMedium text-gray-700 leading-6 bg-gray-50 p-4 rounded-xl">
+            {consultation.complaint}
+          </Text>
+        </View>
+
+        <View className="mb-5 rounded-2xl bg-white p-5 border border-gray-100 shadow-sm">
+          <View className="flex-row items-center mb-4">
+            <View className="h-8 w-8 rounded-lg bg-blue-50 items-center justify-center mr-3">
+              <Image source={icons.document} className="h-4 w-4" tintColor="#3B82F6" />
+            </View>
+            <Text className="font-JakartaBold text-lg text-gray-900">Prontuário Médico</Text>
+          </View>
+
+          <View className="mb-4">
+            <Text className="mb-2 font-JakartaSemiBold text-gray-700 ml-1">Diagnóstico</Text>
+            <TextInput
+              className="rounded-xl bg-gray-50 p-4 font-JakartaMedium text-gray-900 min-h-[80px] border border-gray-200 focus:border-primary-500"
+              placeholder="Descreva o diagnóstico clínico..."
+              placeholderTextColor="#9CA3AF"
+              value={diagnosis}
+              onChangeText={setDiagnosis}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          </View>
+
+          <View className="mb-4">
+            <Text className="mb-2 font-JakartaSemiBold text-gray-700 ml-1">Tratamento</Text>
+            <TextInput
+              className="rounded-xl bg-gray-50 p-4 font-JakartaMedium text-gray-900 min-h-[80px] border border-gray-200 focus:border-primary-500"
+              placeholder="Prescrições e orientações..."
+              placeholderTextColor="#9CA3AF"
+              value={treatment}
+              onChangeText={setTreatment}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          </View>
+
+          <View className="mb-2">
+            <Text className="mb-2 font-JakartaSemiBold text-gray-700 ml-1">Observações (Opcional)</Text>
+            <TextInput
+              className="rounded-xl bg-gray-50 p-4 font-JakartaMedium text-gray-900 min-h-[80px] border border-gray-200 focus:border-primary-500"
+              placeholder="Notas adicionais..."
+              placeholderTextColor="#9CA3AF"
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
+        </View>
+
+        <View className="mb-8">
+          {consultation.status === 'in_progress' && (
+            <TouchableOpacity
+              onPress={handleFinishPress}
+              className="rounded-xl bg-success-500 p-4 shadow-md active:bg-success-600">
+              <Text className="text-center font-JakartaBold text-white text-lg">Finalizar Consulta</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
 
       <ReactNativeModal
         isVisible={showFinishModal}
-        onBackdropPress={() => setShowFinishModal(false)}>
-        <View className="rounded-xl bg-white p-5">
-          <Text className="mb-3 text-center font-JakartaBold text-xl">Finalizar Consulta</Text>
-          <Text className="mb-5 text-center">
-            Você tem certeza que deseja finalizar esta consulta? O paciente será cobrado pelo tempo
-            de atendimento.
+        onBackdropPress={() => setShowFinishModal(false)}
+        useNativeDriver
+        hideModalContentWhileAnimating>
+        <View className="rounded-3xl bg-white p-6">
+          <View className="items-center mb-4">
+            <View className="h-16 w-16 rounded-full bg-success-50 items-center justify-center mb-4">
+              <Image source={icons.checkmark} className="h-8 w-8" tintColor="#38A169" />
+            </View>
+            <Text className="text-center font-JakartaBold text-xl text-gray-900">Finalizar Atendimento?</Text>
+          </View>
+          
+          <Text className="mb-6 text-center font-JakartaMedium text-gray-600 leading-5">
+            Confirme se deseja encerrar a consulta. O valor será calculado e o paciente notificado.
           </Text>
 
-          <View className="flex-row">
+          <View className="flex-row gap-3">
             <TouchableOpacity
               onPress={() => setShowFinishModal(false)}
-              className="mr-2 flex-1 rounded-full bg-gray-200 px-5 py-3">
-              <Text className="text-center font-JakartaSemiBold">Cancelar</Text>
+              className="flex-1 rounded-xl bg-gray-100 py-3.5 border border-gray-200">
+              <Text className="text-center font-JakartaBold text-gray-700">Voltar</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={confirmFinish}
-              className="flex-1 rounded-full bg-success-500 px-5 py-3">
-              <Text className="text-center font-JakartaSemiBold text-white">Confirmar</Text>
+              className="flex-1 rounded-xl bg-success-500 py-3.5 shadow-sm">
+              <Text className="text-center font-JakartaBold text-white">Confirmar</Text>
             </TouchableOpacity>
           </View>
         </View>
       </ReactNativeModal>
-    </ScrollView>
+    </SafeAreaView>
   );
 };
 

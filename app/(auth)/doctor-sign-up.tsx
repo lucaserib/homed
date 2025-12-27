@@ -1,5 +1,6 @@
 import { useSignUp } from '@clerk/clerk-expo';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomButton from 'components/CustomButton';
 import InputField from 'components/InputField';
 import { format } from 'date-fns';
@@ -8,7 +9,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { Link, router } from 'expo-router';
 import { fetchAPI } from 'lib/fetch';
 import { maskCPF, maskCNPJ } from 'lib/mask';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useOptimizedForm } from 'hooks/useOptimizedForm';
 import {
   Text,
   ScrollView,
@@ -224,20 +226,37 @@ const DoctorSignUp = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('🚀 Iniciando registro de médico...');
+
+      await AsyncStorage.setItem('intendedRole', 'doctor');
+
       await signUp.create({
         emailAddress: form.email,
         password: form.password,
       });
 
+      console.log('📧 Preparando envio de código de verificação...');
+
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+
+      console.log('✅ Código de verificação enviado para:', form.email);
 
       setVerification({
         ...verification,
         state: 'pending',
       });
     } catch (err: any) {
-      console.log(err);
-      Alert.alert('Erro', err.errors?.[0]?.longMessage || 'Erro ao criar conta');
+      console.error('❌ Erro ao criar conta:', err);
+      const errorMessage = err.errors?.[0]?.longMessage || 'Erro ao criar conta';
+
+      if (errorMessage.includes("You're already signed in") || errorMessage.includes("already signed in")) {
+        Alert.alert('Aviso', 'Você já está logado. Redirecionando...', [
+          { text: 'OK', onPress: () => router.replace('/') }
+        ]);
+        return;
+      }
+
+      Alert.alert('Erro', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -255,71 +274,65 @@ const DoctorSignUp = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('🔐 Iniciando verificação de email...');
+
       const completeSignUp = await signUp.attemptEmailAddressVerification({
         code: verification.code,
       });
 
-      if (completeSignUp.status === 'complete') {
-        const { createdSessionId, createdUserId } = completeSignUp;
-
-        const formattedDate = form.dateOfBirth.toISOString();
-
-        let imageUrl = null;
-        if (profileImage) {
-          const uploadResponse = await fetchAPI('/(api)/upload/image', {
-            method: 'POST',
-            body: JSON.stringify({
-              image: profileImage,
-              folder: 'doctors',
-              publicId: `doctor_${createdUserId}`,
-            }),
-          });
-
-          if (uploadResponse.success) {
-            imageUrl = uploadResponse.imageUrl;
-          }
-        }
-
-        await fetchAPI('/(api)/send-email', {
-          method: 'POST',
-          body: JSON.stringify({
-            recipientEmail: form.email,
-            recipientName: `${form.firstName} ${form.lastName}`,
-            recipientId: createdUserId,
-            recipientType: 'doctor',
-            emailType: 'doctor_registration',
-          }),
-        });
-
-        await fetchAPI('/doctor/register', {
-          method: 'POST',
-          body: JSON.stringify({
-            firstName: form.firstName,
-            lastName: form.lastName,
-            email: form.email,
-            phone: form.phone,
-            dateOfBirth: formattedDate,
-            specialty: form.specialty,
-            licenseNumber: form.licenseNumber,
-            cpf: form.cpf.replace(/[^\d]/g, ''),
-            cnpj: form.cnpj.replace(/[^\d]/g, ''),
-            companyName: form.companyName,
-            address: form.address,
-            pricePerConsultation: parseFloat(form.hourlyRate || '0'),
-            profileImage: imageUrl,
-          }),
-        });
-
-        await setActive({ session: createdSessionId });
-
-        setVerification({ ...verification, state: 'success' });
-      } else {
-        setVerification({ ...verification, error: 'Verificação falhou', state: 'failed' });
+      if (completeSignUp.status !== 'complete') {
+        setVerification({ ...verification, error: 'Código de verificação inválido', state: 'failed' });
+        setIsSubmitting(false);
+        return;
       }
+
+      const { createdSessionId, createdUserId } = completeSignUp;
+      console.log('✅ Verificação completa. Clerk User ID:', createdUserId);
+
+      const formattedDate = form.dateOfBirth.toISOString();
+
+      let imageUrl = null;
+
+      console.log('📝 Criando médico no banco de dados...');
+
+      await fetchAPI('/auth/register/doctor', {
+        method: 'POST',
+        body: JSON.stringify({
+          clerkId: createdUserId,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          phone: form.phone,
+          dateOfBirth: formattedDate,
+          specialty: form.specialty,
+          licenseNumber: form.licenseNumber,
+          cpf: form.cpf.replace(/[^\d]/g, ''),
+          cnpj: form.cnpj.replace(/[^\d]/g, ''),
+          companyName: form.companyName,
+          address: form.address,
+          hourlyRate: parseFloat(form.hourlyRate || '0'),
+          profileImageUrl: imageUrl,
+        }),
+      });
+
+      console.log('✅ Médico criado no banco com status PENDING!');
+
+      setVerification({ ...verification, state: 'success' });
     } catch (err: any) {
+      console.error('❌ Erro no registro:', err);
+
+      let message = 'Erro de verificação';
+      if (err.status === 409 || err.message?.includes('Conflict')) {
+        message = 'Esta conta já está registrada como Paciente. Por favor, use outro email ou entre em contato com o suporte.';
+      } else if (err.errors?.[0]?.longMessage) {
+        message = err.errors[0].longMessage;
+      } else if (err.message) {
+        message = err.message;
+      }
+
       setVerification({
         ...verification,
-        error: err.errors?.[0]?.longMessage || 'Erro de verificação',
+        error: message,
         state: 'failed',
       });
     } finally {
@@ -680,8 +693,11 @@ const DoctorSignUp = () => {
             </Text>
 
             <CustomButton
-              title="Ir para Página de Login"
-              onPress={() => router.replace('/(auth)/sign-in')}
+              title="Voltar para Login"
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.replace('/(auth)/sign-in');
+              }}
               className="mt-5"
             />
           </View>

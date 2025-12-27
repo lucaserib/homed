@@ -1,16 +1,16 @@
 import { Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native';
 
 const LayoutRoot = () => {
   return (
-    <SafeAreaView className="mt-10 h-full">
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="find-ride" options={{ headerShown: false }} />
-        <Stack.Screen name="confirm-ride" options={{ headerShown: false }} />
-        <Stack.Screen name="book-ride" options={{ headerShown: false }} />
-      </Stack>
-    </SafeAreaView>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F9FAFB' } }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="confirm-consultation" />
+      <Stack.Screen name="consultation-details" />
+      <Stack.Screen name="medical-record" />
+      <Stack.Screen name="request-consultation" />
+      <Stack.Screen name="select-doctor" />
+      <Stack.Screen name="find-doctor" />
+    </Stack>
   );
 };
 export default LayoutRoot;

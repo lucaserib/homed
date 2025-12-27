@@ -25,11 +25,13 @@ const getBgVariantStyle = (variant: ButtonProps['bgVariant']) => {
     case 'success':
       return 'bg-green-500';
     case 'outline':
-      return 'bg-transparent border-neutral-300 border-[0.5px]';
+      return 'bg-transparent border-neutral-300 border';
     case 'light':
-      return 'bg-white border-neutral-200 border-[0.5px]';
+      return 'bg-white border-neutral-200 border';
+    case 'primary':
+      return 'bg-primary-500';
     default:
-      return 'bg-[#0286FF]';
+      return 'bg-primary-500';
   }
 };
 
@@ -41,14 +43,26 @@ const CustomButton = ({
   IconLeft,
   IconRight,
   className,
+  disabled = false,
   ...props
 }: ButtonProps) => (
   <TouchableOpacity
     onPress={onPress}
-    className={`flex w-full flex-row items-center justify-center rounded-full p-3 shadow-md shadow-neutral-400/70 ${getBgVariantStyle(bgVariant)} ${className}`}
+    disabled={disabled}
+    activeOpacity={0.8}
+    className={`flex w-full flex-row items-center justify-center rounded-2xl py-4 px-6 ${getBgVariantStyle(bgVariant)} ${disabled ? 'opacity-50' : ''} ${className}`}
+    style={{
+      shadowColor: bgVariant === 'primary' ? '#4C7C68' : '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 6,
+      elevation: 4,
+    }}
     {...props}>
     {IconLeft && <IconLeft />}
-    <Text className={`text-lg font-bold ${getTextVariantStyle(textVariant)}`}>{title}</Text>
+    <Text className={`font-JakartaBold text-base ${getTextVariantStyle(textVariant)}`}>
+      {title}
+    </Text>
     {IconRight && <IconRight />}
   </TouchableOpacity>
 );

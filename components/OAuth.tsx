@@ -1,13 +1,43 @@
 import { useSSO } from '@clerk/clerk-expo';
 import { googleOAuth } from 'cache';
 import { router } from 'expo-router';
-import React, { useCallback } from 'react';
-import { View, Text, Image, Alert } from 'react-native';
+import React, { useCallback, useState, useEffect } from 'react';
+import { View, Text, Image, Alert, ActivityIndicator } from 'react-native';
 
 import CustomButton from './CustomButton';
 import { icons } from '../constants/index';
 
 const OAuth = () => {
+  const [isReady, setIsReady] = useState(false);
+
+  // Aguardar um momento antes de usar os hooks do Clerk
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 1500); // Aguardar mais tempo que o componente pai
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!isReady) {
+    return (
+      <View className="mt-4">
+        <View className="flex flex-row items-center justify-center gap-x-3">
+          <View className="h-[1px] flex-1 bg-general-100" />
+          <Text className="text-lg">Ou</Text>
+          <View className="h-[1px] flex-1 bg-general-100" />
+        </View>
+        <View className="mt-5 items-center">
+          <ActivityIndicator size="small" color="#0286FF" />
+        </View>
+      </View>
+    );
+  }
+
+  return <OAuthContent />;
+};
+
+const OAuthContent = () => {
   const { startSSOFlow } = useSSO();
 
   const handleGoogleSignIn = useCallback(async () => {
@@ -24,7 +54,8 @@ const OAuth = () => {
       console.error(JSON.stringify(err, null, 2));
       Alert.alert('Erro', 'falha na autenticação');
     }
-  }, []);
+  }, [startSSOFlow]);
+
   return (
     <View>
       <View className="mt-4 flex flex-row items-center justify-center gap-x-3">

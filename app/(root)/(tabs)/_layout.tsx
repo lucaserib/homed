@@ -1,16 +1,36 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { View, Image, ImageSourcePropType, SafeAreaView } from 'react-native';
+import { View, Image, ImageSourcePropType, Text, Platform } from 'react-native';
 
 import { icons } from '../../../constants';
 
-const TabIcon = ({ source, focused }: { source: ImageSourcePropType; focused: boolean }) => (
-  <View
-    className={`flex  items-center justify-center rounded-full ${focused ? 'bg-general-300' : ''}`}>
+const TabIcon = ({
+  source,
+  focused,
+  label
+}: {
+  source: ImageSourcePropType;
+  focused: boolean;
+  label: string;
+}) => (
+  <View className="items-center justify-center gap-1">
     <View
-      className={`h-12 w-12 items-center justify-center rounded-full ${focused ? 'bg-general-400' : ''}`}>
-      <Image source={source} tintColor="white" resizeMode="contain" className="h-7 w-7" />
+      className={`h-10 w-10 items-center justify-center rounded-full ${
+        focused ? 'bg-primary-500' : 'bg-transparent'
+      }`}>
+      <Image
+        source={source}
+        tintColor={focused ? '#FFFFFF' : '#9CA3AF'}
+        resizeMode="contain"
+        className="h-5 w-5"
+      />
     </View>
+    <Text
+      className={`text-[10px] font-JakartaSemiBold ${
+        focused ? 'text-primary-500' : 'text-gray-400'
+      }`}>
+      {label}
+    </Text>
   </View>
 );
 
@@ -19,30 +39,30 @@ export default function Layout() {
     <Tabs
       initialRouteName="home"
       screenOptions={{
-        tabBarActiveTintColor: 'white',
-        tabBarInactiveTintColor: 'white',
+        tabBarActiveTintColor: '#4C7C68',
+        tabBarInactiveTintColor: '#9CA3AF',
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: '#333333',
-          borderRadius: 50,
-          paddingBottom: 25,
-          overflow: 'hidden',
-          marginHorizontal: 20,
-          marginBottom: 20,
-          height: 78,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexDirection: 'row',
-          position: 'absolute',
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 0,
+          elevation: 0,
+          height: Platform.OS === 'ios' ? 85 : 60,
+          paddingTop: 10,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 10,
         },
       }}>
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Home',
+          title: 'Início',
           headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon source={icons.home} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.home} focused={focused} label="Início" />
+          ),
         }}
       />
       <Tabs.Screen
@@ -50,23 +70,25 @@ export default function Layout() {
         options={{
           title: 'Consultas',
           headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon source={icons.list} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="chat"
-        options={{
-          title: 'Chat',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon source={icons.chat} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.doctor} focused={focused} label="Consultas" />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'Perfil',
           headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon source={icons.profile} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.profile} focused={focused} label="Perfil" />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          href: null, // Oculta da tab bar
         }}
       />
     </Tabs>

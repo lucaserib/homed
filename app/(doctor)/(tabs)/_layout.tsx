@@ -1,65 +1,85 @@
-// app/(doctor)/(tabs)/_layout.tsx
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { View, Image, ImageSourcePropType, SafeAreaView } from 'react-native';
+import { Image, ImageSourcePropType, View, Text } from 'react-native';
 
 import { icons } from '../../../constants';
 
-const TabIcon = ({ source, focused }: { source: ImageSourcePropType; focused: boolean }) => (
+const TabIcon = ({
+  source,
+  focused,
+  name,
+}: {
+  source: ImageSourcePropType;
+  focused: boolean;
+  name: string;
+}) => (
   <View
-    className={`flex items-center justify-center rounded-full ${focused ? 'bg-general-300' : ''}`}>
+    className={`flex flex-row items-center justify-center rounded-full px-4 py-2 ${
+      focused ? 'bg-primary-500' : ''
+    }`}>
     <View
-      className={`h-12 w-12 items-center justify-center rounded-full ${focused ? 'bg-general-400' : ''}`}>
-      <Image source={source} tintColor="white" resizeMode="contain" className="h-7 w-7" />
+      className={`items-center justify-center rounded-full ${
+        focused ? 'bg-primary-600' : 'bg-transparent'
+      }`}>
+      <Image
+        source={source}
+        tintColor={focused ? 'white' : '#8E8E93'}
+        resizeMode="contain"
+        className="h-6 w-6"
+      />
     </View>
+    {focused && (
+      <Text className="ml-2 font-JakartaSemiBold text-xs text-white">{name}</Text>
+    )}
   </View>
 );
 
-export default function DoctorTabsLayout() {
+export default function Layout() {
   return (
     <Tabs
       initialRouteName="dashboard"
       screenOptions={{
         tabBarActiveTintColor: 'white',
-        tabBarInactiveTintColor: 'white',
+        tabBarInactiveTintColor: '#8E8E93',
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: '#333333',
+          backgroundColor: '#FFFFFF',
           borderRadius: 50,
-          paddingBottom: 25,
+          paddingBottom: 0,
           overflow: 'hidden',
           marginHorizontal: 20,
           marginBottom: 20,
-          height: 78,
+          height: 70,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexDirection: 'row',
           position: 'absolute',
+          borderTopWidth: 0,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          elevation: 5,
         },
       }}>
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Dashboard',
+          title: 'Início',
           headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon source={icons.home} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.home} focused={focused} name="Início" />
+          ),
         }}
       />
       <Tabs.Screen
-        name="consultations"
+        name="history"
         options={{
-          title: 'Consultas',
+          title: 'Histórico',
           headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon source={icons.list} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="chat"
-        options={{
-          title: 'Chat',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon source={icons.chat} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.list} focused={focused} name="Histórico" />
+          ),
         }}
       />
       <Tabs.Screen
@@ -67,7 +87,9 @@ export default function DoctorTabsLayout() {
         options={{
           title: 'Perfil',
           headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon source={icons.profile} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.profile} focused={focused} name="Perfil" />
+          ),
         }}
       />
     </Tabs>
