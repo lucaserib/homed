@@ -97,7 +97,7 @@ const Consultations = () => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4C7C68" />
           }
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 115 : 95 }}>
+          contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 100 : 90 }}>
           {activeConsultation ? (
             <View className="px-5 pt-5">
               {/* Status Card */}

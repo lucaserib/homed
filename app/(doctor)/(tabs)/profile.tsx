@@ -3,13 +3,16 @@ import CustomButton from 'components/CustomButton';
 import { router } from 'expo-router';
 import { View, Text, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useUserStore } from '../../../store';
 
 const DoctorProfile = () => {
   const { signOut, user } = useClerk();
+  const { userName, clearUserData } = useUserStore();
 
   const handleSignOut = async () => {
+    clearUserData();
     await signOut();
-    router.replace('/(auth)/sign-in');
+    router.replace('/(auth)/welcome');
   };
 
   return (
@@ -18,7 +21,7 @@ const DoctorProfile = () => {
         <View className="h-24 w-24 rounded-full bg-gray-200 overflow-hidden mb-4">
            <Image source={{ uri: user?.imageUrl }} className="h-full w-full" />
         </View>
-        <Text className="font-JakartaBold text-2xl">Dr. {user?.firstName} {user?.lastName}</Text>
+        <Text className="font-JakartaBold text-2xl">Dr. {userName || 'Médico'}</Text>
         <Text className="mb-8 text-gray-500">{user?.emailAddresses[0]?.emailAddress}</Text>
         
         <CustomButton

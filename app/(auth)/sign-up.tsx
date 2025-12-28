@@ -255,8 +255,14 @@ const SignUp = () => {
       console.log('✅ Verificação completa. Clerk User ID:', createdUserId);
 
       console.log('📝 Criando paciente no banco de dados...');
+      console.log('📋 Dados que serão enviados:', {
+        clerkId: createdUserId,
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+      });
 
-      await fetchAPI('/auth/register/patient', {
+      const registerResponse = await fetchAPI('/auth/register/patient', {
         method: 'POST',
         body: JSON.stringify({
           clerkId: createdUserId,
@@ -271,7 +277,7 @@ const SignUp = () => {
         }),
       });
 
-      console.log('✅ Paciente criado no banco com status PENDING!');
+      console.log('✅ Resposta do registro:', registerResponse);
 
       setVerification({ ...verification, state: 'success' });
       setShowSuccessModal(true);

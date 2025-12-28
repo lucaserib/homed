@@ -1,4 +1,4 @@
-import { DriverStore, LocationStore, MarkerData, DoctorStore, DoctorMarkerData } from 'types/type';
+import { DriverStore, LocationStore, MarkerData, DoctorStore, DoctorMarkerData, UserStore } from 'types/type';
 import { create } from 'zustand';
 
 export const useLocationStore = create<LocationStore>((set) => ({
@@ -50,7 +50,13 @@ export const useDoctorStore = create<DoctorStore>((set) => ({
   clearSelectedDoctor: () => set(() => ({ selectedDoctor: null })),
 }));
 
-// Legacy Driver Store for backward compatibility
+export const useUserStore = create<UserStore>((set) => ({
+  userName: null,
+  userRole: null,
+  setUserData: (name: string, role: 'patient' | 'doctor') => set(() => ({ userName: name, userRole: role })),
+  clearUserData: () => set(() => ({ userName: null, userRole: null })),
+}));
+
 export const useDriverStore = create<DriverStore>((set) => ({
   drivers: [] as MarkerData[],
   selectedDriver: null,

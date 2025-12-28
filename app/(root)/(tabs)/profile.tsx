@@ -4,20 +4,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import { icons } from '../../../constants';
+import { useUserStore } from '../../../store';
 
 const Profile = () => {
   const { user } = useUser();
   const { signOut } = useAuth();
+  const { userName, clearUserData } = useUserStore();
 
   const handleSignOut = async () => {
+    clearUserData();
     await signOut();
-    router.replace('/(auth)/sign-in');
+    router.replace('/(auth)/welcome');
   };
 
-  const userName =
-    user?.firstName ||
-    user?.emailAddresses?.[0]?.emailAddress?.split('@')?.[0] ||
-    'Usuário';
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || '';
 
   const menuItems = [
@@ -79,7 +78,7 @@ const Profile = () => {
         <ScrollView
           showsVerticalScrollIndicator={false}
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 115 : 95 }}>
+          contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 100 : 90 }}>
         {/* User Info Card */}
         <View className="mx-5 mt-5">
           <View
@@ -102,13 +101,13 @@ const Profile = () => {
                   elevation: 4,
                 }}>
                 <Text className="font-JakartaBold text-3xl text-white">
-                  {userName.charAt(0).toUpperCase()}
+                  {(userName || 'U').charAt(0).toUpperCase()}
                 </Text>
               </View>
 
               <View className="ml-4 flex-1">
                 <Text className="font-JakartaBold text-xl text-gray-900">
-                  {userName}
+                  {userName || 'Usuário'}
                 </Text>
                 <Text className="font-JakartaMedium text-sm text-gray-500 mt-1">
                   {userEmail}

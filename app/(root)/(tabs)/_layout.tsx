@@ -1,36 +1,39 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { View, Image, ImageSourcePropType, Text, Platform } from 'react-native';
+import { View, Image, ImageSourcePropType, Platform } from 'react-native';
 
 import { icons } from '../../../constants';
 
 const TabIcon = ({
   source,
   focused,
-  label
 }: {
   source: ImageSourcePropType;
   focused: boolean;
-  label: string;
 }) => (
-  <View className="items-center justify-center gap-1">
+  <View className="flex-1 items-center justify-center">
     <View
-      className={`h-10 w-10 items-center justify-center rounded-full ${
+      className={`h-12 w-12 items-center justify-center rounded-2xl ${
         focused ? 'bg-primary-500' : 'bg-transparent'
-      }`}>
+      }`}
+      style={
+        focused
+          ? {
+              shadowColor: '#4C7C68',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }
+          : undefined
+      }>
       <Image
         source={source}
         tintColor={focused ? '#FFFFFF' : '#9CA3AF'}
         resizeMode="contain"
-        className="h-5 w-5"
+        className="h-6 w-6"
       />
     </View>
-    <Text
-      className={`text-[10px] font-JakartaSemiBold ${
-        focused ? 'text-primary-500' : 'text-gray-400'
-      }`}>
-      {label}
-    </Text>
   </View>
 );
 
@@ -43,16 +46,20 @@ export default function Layout() {
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarShowLabel: false,
         tabBarStyle: {
+          position: 'absolute',
           backgroundColor: '#FFFFFF',
           borderTopWidth: 0,
-          elevation: 0,
-          height: Platform.OS === 'ios' ? 85 : 60,
-          paddingTop: 10,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+          elevation: 20,
+          height: Platform.OS === 'ios' ? 85 : 70,
+          paddingTop: 8,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          paddingHorizontal: 16,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 10,
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
         },
       }}>
       <Tabs.Screen
@@ -61,7 +68,7 @@ export default function Layout() {
           title: 'Início',
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.home} focused={focused} label="Início" />
+            <TabIcon source={icons.home} focused={focused} />
           ),
         }}
       />
@@ -71,7 +78,7 @@ export default function Layout() {
           title: 'Consultas',
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.doctor} focused={focused} label="Consultas" />
+            <TabIcon source={icons.calendar} focused={focused} />
           ),
         }}
       />
@@ -81,7 +88,7 @@ export default function Layout() {
           title: 'Perfil',
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.profile} focused={focused} label="Perfil" />
+            <TabIcon source={icons.profile} focused={focused} />
           ),
         }}
       />

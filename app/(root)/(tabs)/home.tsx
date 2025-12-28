@@ -1,6 +1,5 @@
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
-import { useFetch } from '../../../lib/fetch';
 import LocationService from '../../../services/LocationService';
 import { useEffect, useState, useRef } from 'react';
 import {
@@ -14,34 +13,25 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import { useLocationStore } from '../../../store';
-import { ConsultationDetails } from '../../../types/consultation';
+import { useLocationStore, useUserStore } from '../../../store';
 import HomeHeader from '../../../components/HomeHeader';
 import CustomButton from '../../../components/CustomButton';
 import GoogleTextInput from '../../../components/GoogleTextInput';
 import { images, icons } from '../../../constants';
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ConsultationSummaryCard from '../../../components/ConsultationSummaryCard';
-import LoadingScreen from '../../../components/LoadingScreen';
-import EmptyState from '../../../components/EmptyState';
 
 const { width, height } = Dimensions.get('window');
 
 export default function Page() {
   const { userAddress, userLatitude, userLongitude, setUserLocation } = useLocationStore();
-  const { user } = useUser();
-  const {
-    data: recentConsultations,
-    loading,
-    refetch,
-  } = useFetch<ConsultationDetails[]>(user?.id ? `/consultations/patient/${user.id}` : null);
+  const { userName, clearUserData } = useUserStore();
   const { signOut } = useAuth();
   const mapRef = useRef<MapView>(null);
 
   const handleSignOut = () => {
+    clearUserData();
     signOut();
-    router.replace('/(auth)/sign-in');
+    router.replace('/(auth)/welcome');
   };
 
   const [loadingLocation, setLoadingLocation] = useState(false);
@@ -96,9 +86,6 @@ export default function Page() {
     }
   }, [userLatitude, userLongitude]);
 
-  const userName =
-    user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split('@')?.[0] || 'Usuário';
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View className="flex-1 bg-white">
@@ -131,34 +118,34 @@ export default function Page() {
         </View>
 
         <SafeAreaView className="flex-1" pointerEvents="box-none">
-          <View className="px-5 pt-2">
-            <HomeHeader userName={userName} onSignOut={handleSignOut} />
+          <View className="px-5 pt-4">
+            <HomeHeader userName={userName || 'Usuário'} onSignOut={handleSignOut} />
           </View>
 
           <View className="flex-1 justify-end pb-24 px-5" pointerEvents="box-none">
             <View
-              className="rounded-3xl bg-white p-5 shadow-lg shadow-black/10"
+              className="rounded-3xl bg-white px-5 py-6 shadow-lg shadow-black/10"
               style={{ elevation: 5 }}
             >
-              <View className="mb-4 flex-row items-center">
-                <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary-500">
-                  <Image source={icons.home} className="h-6 w-6" tintColor="#FFFFFF" />
+              <View className="mb-5 flex-row items-center">
+                <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary-500">
+                  <Image source={icons.home} className="h-7 w-7" tintColor="#FFFFFF" />
                 </View>
-                <View className="ml-3 flex-1">
+                <View className="ml-4 flex-1">
                   <Text className="font-JakartaBold text-lg text-gray-900">
                     Solicitar Atendimento
                   </Text>
-                  <Text className="mt-0.5 font-JakartaMedium text-xs text-gray-600">
+                  <Text className="mt-1 font-JakartaMedium text-xs text-gray-600">
                     Médico até você em minutos
                   </Text>
                 </View>
               </View>
 
-              <View className="mb-4">
+              <View className="mb-5">
                 <GoogleTextInput
                   icon={icons.pin}
                   initialLocation={userAddress || 'Onde você precisa de atendimento?'}
-                  containerStyle="bg-gray-50 border border-gray-100"
+                  containerStyle="bg-gray-50 border border-gray-100 rounded-xl"
                   textInputBackgroundColor="transparent"
                   handlePress={(location) => setUserLocation(location)}
                 />
@@ -166,7 +153,7 @@ export default function Page() {
                 <TouchableOpacity
                   onPress={handleUseCurrentLocation}
                   disabled={loadingLocation}
-                  className="mt-3 flex-row items-center"
+                  className="mt-3 flex-row items-center px-1"
                 >
                   <Image source={icons.target} className="mr-2 h-4 w-4" tintColor="#4C7C68" />
                   <Text className="font-JakartaSemiBold text-sm text-primary-700">

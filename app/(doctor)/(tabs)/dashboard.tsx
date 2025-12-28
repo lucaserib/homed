@@ -17,17 +17,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { icons, images } from '../../../constants';
 import { fetchAPI } from 'lib/fetch';
-import { useLocationStore } from 'store';
+import { useLocationStore, useUserStore } from 'store';
 import { connectSocket, disconnectSocket } from 'lib/socket';
 
 const DoctorDashboard = () => {
   const { user } = useUser();
   const { setUserLocation, userLatitude, userLongitude } = useLocationStore();
-  
+  const { userName } = useUserStore();
+
   const [isAvailable, setIsAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [doctorProfile, setDoctorProfile] = useState<any>(null);
-  
+
   const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
@@ -50,7 +51,6 @@ const DoctorDashboard = () => {
         address: `${address[0].name}, ${address[0].region}`,
       });
 
-      // Fetch doctor profile to get availability status
       try {
         if (user?.emailAddresses[0]?.emailAddress) {
            const res = await fetchAPI(`/doctor/check?email=${encodeURIComponent(user.emailAddresses[0].emailAddress)}`);
@@ -58,7 +58,6 @@ const DoctorDashboard = () => {
              setDoctorProfile(res.data);
              setIsAvailable(res.data.isAvailable);
 
-             // Connect to WebSocket
              if (res.data.id) {
                const socket = connectSocket(res.data.id, 'doctor');
                
@@ -82,7 +81,7 @@ const DoctorDashboard = () => {
            }
         }
       } catch (error) {
-        console.error("Error fetching doctor profile", error);
+        console.error('Error fetching doctor profile', error);
       } finally {
         setLoading(false);
       }
@@ -150,7 +149,7 @@ const DoctorDashboard = () => {
               </View>
               <View className="ml-3">
                 <Text className="font-JakartaSemiBold text-lg text-gray-900">
-                  Olá, Dr. {user?.firstName}
+                  Olá, Dr. {userName?.split(' ')[0] || 'Médico'}
                 </Text>
                 <Text className={`text-sm font-JakartaMedium ${isAvailable ? 'text-green-500' : 'text-gray-500'}`}>
                   {isAvailable ? '● Online' : '○ Offline'}
@@ -170,7 +169,6 @@ const DoctorDashboard = () => {
           </View>
         </SafeAreaView>
 
-        {/* Bottom Status Overlay */}
         <View className="absolute bottom-24 w-full px-5">
           <View className="rounded-2xl bg-white p-5 shadow-lg shadow-neutral-300">
             <Text className="mb-2 font-JakartaBold text-xl text-gray-900">

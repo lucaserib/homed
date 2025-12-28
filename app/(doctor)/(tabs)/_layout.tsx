@@ -13,22 +13,28 @@ const TabIcon = ({
   name: string;
 }) => (
   <View
-    className={`flex flex-row items-center justify-center rounded-full px-4 py-2 ${
+    className={`flex flex-row items-center justify-center rounded-full px-5 py-2.5 ${
       focused ? 'bg-primary-500' : ''
-    }`}>
-    <View
-      className={`items-center justify-center rounded-full ${
-        focused ? 'bg-primary-600' : 'bg-transparent'
-      }`}>
-      <Image
-        source={source}
-        tintColor={focused ? 'white' : '#8E8E93'}
-        resizeMode="contain"
-        className="h-6 w-6"
-      />
-    </View>
+    }`}
+    style={
+      focused
+        ? {
+            shadowColor: '#4C7C68',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 6,
+          }
+        : undefined
+    }>
+    <Image
+      source={source}
+      tintColor={focused ? 'white' : '#6B7280'}
+      resizeMode="contain"
+      className="h-5 w-5"
+    />
     {focused && (
-      <Text className="ml-2 font-JakartaSemiBold text-xs text-white">{name}</Text>
+      <Text className="ml-2 font-JakartaBold text-xs text-white">{name}</Text>
     )}
   </View>
 );
@@ -39,27 +45,23 @@ export default function Layout() {
       initialRouteName="dashboard"
       screenOptions={{
         tabBarActiveTintColor: 'white',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarInactiveTintColor: '#6B7280',
         tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          borderRadius: 50,
-          paddingBottom: 0,
-          overflow: 'hidden',
+          borderRadius: 28,
+          paddingVertical: 12,
+          paddingHorizontal: 16,
           marginHorizontal: 20,
-          marginBottom: 20,
-          height: 70,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexDirection: 'row',
+          marginBottom: 24,
+          height: 68,
           position: 'absolute',
           borderTopWidth: 0,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
-          elevation: 5,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.12,
+          shadowRadius: 16,
+          elevation: 12,
         },
       }}>
       <Tabs.Screen

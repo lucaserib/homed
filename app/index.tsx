@@ -4,10 +4,12 @@ import { fetchAPI } from 'lib/fetch';
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
 import CustomButton from 'components/CustomButton';
+import { useUserStore } from 'store';
 
 const AuthenticatedApp = () => {
   const { isSignedIn, isLoaded, signOut } = useAuth();
   const { user } = useUser();
+  const { setUserData, clearUserData } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -16,14 +18,11 @@ const AuthenticatedApp = () => {
     if (!isLoaded) return;
 
     if (!isSignedIn) {
-      console.log('🔓 Usuário não autenticado, redirecionando para welcome...');
       setTimeout(() => {
         router.replace('/(auth)/welcome');
       }, 100);
       return;
     }
-
-    console.log('🔍 Verificando status do usuário autenticado...');
 
     setIsLoading(true);
     setHasError(false);
@@ -32,37 +31,34 @@ const AuthenticatedApp = () => {
     try {
       const response = await fetchAPI('/sync/status');
 
-      console.log('🔄 Sync Status:', response);
-
       if (response?.exists) {
         if (response.status === 'APPROVED') {
           if (response.role === 'doctor') {
-            console.log('✅ Médico aprovado, redirecionando para dashboard...');
+            setUserData(response.name || 'Médico', 'doctor');
             router.replace('/(doctor)/(tabs)/dashboard');
           } else if (response.role === 'patient') {
-            console.log('✅ Paciente aprovado, redirecionando para home...');
+            setUserData(response.name || 'Paciente', 'patient');
             router.replace('/(root)/(tabs)/home');
           }
         } else if (response.status === 'PENDING') {
-          console.log('⏳ Conta pendente de aprovação...');
+          clearUserData();
           await signOut();
           router.replace('/(auth)/pending-approval');
         } else if (response.status === 'REJECTED') {
-          console.log('❌ Cadastro rejeitado');
+          clearUserData();
           setErrorMessage('Seu cadastro foi rejeitado. Entre em contato com o suporte para mais informações.');
           setHasError(true);
         } else if (response.status === 'UNDER_REVIEW') {
-          console.log('🔍 Cadastro em revisão...');
+          clearUserData();
           await signOut();
           router.replace('/(auth)/pending-approval');
         }
       } else {
-        console.warn('⚠️ Usuário autenticado no Clerk mas não encontrado no banco de dados');
+        clearUserData();
         setErrorMessage('Sua conta não foi encontrada. Por favor, complete seu cadastro novamente.');
         setHasError(true);
       }
     } catch (error: any) {
-      console.error('❌ Erro ao verificar status:', error);
 
       if (error?.status === 401) {
         setErrorMessage('Sessão expirada. Por favor, faça login novamente.');
@@ -80,11 +76,11 @@ const AuthenticatedApp = () => {
 
   const handleLogout = async () => {
     try {
-      console.log('🚪 Realizando logout...');
+      clearUserData();
       await signOut();
       router.replace('/(auth)/welcome');
     } catch (error) {
-      console.error('❌ Erro ao fazer logout:', error);
+      console.error('Erro ao fazer logout:', error);
     }
   };
 

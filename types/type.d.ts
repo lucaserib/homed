@@ -273,3 +273,10 @@ declare interface PaymentProps {
   driverId: number;
   rideTime: number;
 }
+
+declare interface UserStore {
+  userName: string | null;
+  userRole: 'patient' | 'doctor' | null;
+  setUserData: (name: string, role: 'patient' | 'doctor') => void;
+  clearUserData: () => void;
+}

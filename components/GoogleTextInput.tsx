@@ -81,18 +81,20 @@ const GoogleTextInput = ({
 
   return (
     <View className={`relative ${containerStyle}`}>
-      <View className="flex flex-row items-center justify-center">
-        <View className="ml-4 h-6 w-6 items-center justify-center">
-          <Image source={icon ? icon : icons.search} className="h-6 w-6" resizeMode="contain" />
+      <View className="flex flex-row items-center rounded-xl">
+        <View className="ml-3 h-6 w-6 items-center justify-center">
+          <Image source={icon ? icon : icons.search} className="h-5 w-5" resizeMode="contain" tintColor="#6B7280" />
         </View>
 
         <TextInput
-          className="flex-1 px-4 py-4 font-JakartaMedium text-base text-gray-900"
+          className="flex-1 px-3 py-3.5 font-JakartaMedium text-sm text-gray-900"
           placeholder={initialLocation ?? 'Para onde deseja ir?'}
           placeholderTextColor="#9CA3AF"
           value={input}
           onChangeText={handleInputChange}
           style={{ backgroundColor: textInputBackgroundColor }}
+          numberOfLines={1}
+          ellipsizeMode="tail"
         />
       </View>
 
