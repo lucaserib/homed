@@ -42,7 +42,6 @@ const AuthenticatedApp = () => {
           }
         } else if (response.status === 'PENDING') {
           clearUserData();
-          await signOut();
           router.replace('/(auth)/pending-approval');
         } else if (response.status === 'REJECTED') {
           clearUserData();
@@ -50,7 +49,6 @@ const AuthenticatedApp = () => {
           setHasError(true);
         } else if (response.status === 'UNDER_REVIEW') {
           clearUserData();
-          await signOut();
           router.replace('/(auth)/pending-approval');
         }
       } else {

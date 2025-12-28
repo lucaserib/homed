@@ -693,10 +693,10 @@ const DoctorSignUp = () => {
             </Text>
 
             <CustomButton
-              title="Voltar para Login"
+              title="Verificar Status de Aprovação"
               onPress={() => {
                 setShowSuccessModal(false);
-                router.replace('/(auth)/sign-in');
+                router.replace('/');
               }}
               className="mt-5"
             />

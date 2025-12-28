@@ -27,7 +27,9 @@ const PendingApproval = () => {
           [
             {
               text: 'OK',
-              onPress: () => {
+              onPress: async () => {
+                console.log('🔓 Fazendo logout antes de redirecionar para login...');
+                await signOut();
                 router.replace('/(auth)/sign-in');
               },
             },
@@ -129,7 +131,11 @@ const PendingApproval = () => {
 
           <CustomButton
             title="Voltar para Login"
-            onPress={() => router.replace('/(auth)/sign-in')}
+            onPress={async () => {
+              console.log('🔓 Fazendo logout antes de voltar para login...');
+              await signOut();
+              router.replace('/(auth)/sign-in');
+            }}
             bgVariant="outline"
             textVariant="primary"
             className="mb-4 w-full"
@@ -137,7 +143,11 @@ const PendingApproval = () => {
 
           <CustomButton
             title="Ir para Início"
-            onPress={() => router.replace('/(auth)/welcome')}
+            onPress={async () => {
+              console.log('🔓 Fazendo logout antes de ir para início...');
+              await signOut();
+              router.replace('/(auth)/welcome');
+            }}
             bgVariant="outline"
             textVariant="secondary"
             className="w-full"
