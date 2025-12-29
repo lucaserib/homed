@@ -22,7 +22,7 @@ interface UpdateDoctorLocationDto {
 
 export class ConsultationService {
   static async createConsultation(data: CreateConsultationDto) {
-    return fetchAPI('/(api)/consultations', {
+    return fetchAPI('/consultations', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -35,55 +35,55 @@ export class ConsultationService {
     if (radius) params.append('radius', radius.toString());
 
     const queryString = params.toString();
-    return fetchAPI(`/(api)/consultations/pending${queryString ? `?${queryString}` : ''}`);
+    return fetchAPI(`/consultations/pending${queryString ? `?${queryString}` : ''}`);
   }
 
   static async getPatientConsultations(patientId: string, status?: string) {
     const url = status
-      ? `/(api)/consultations/patient/${patientId}?status=${status}`
-      : `/(api)/consultations/patient/${patientId}`;
+      ? `/consultations/patient/${patientId}?status=${status}`
+      : `/consultations/patient/${patientId}`;
     return fetchAPI(url);
   }
 
   static async getDoctorConsultations(doctorId: string, status?: string) {
     const url = status
-      ? `/(api)/consultations/doctor/${doctorId}?status=${status}`
-      : `/(api)/consultations/doctor/${doctorId}`;
+      ? `/consultations/doctor/${doctorId}?status=${status}`
+      : `/consultations/doctor/${doctorId}`;
     return fetchAPI(url);
   }
 
   static async getConsultationDetails(consultationId: string) {
-    return fetchAPI(`/(api)/consultations/${consultationId}`);
+    return fetchAPI(`/consultations/${consultationId}`);
   }
 
   static async acceptConsultation(consultationId: string, data: AcceptConsultationDto) {
-    return fetchAPI(`/(api)/consultations/${consultationId}/accept`, {
+    return fetchAPI(`/consultations/${consultationId}/accept`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   static async declineConsultation(consultationId: string, doctorId: string) {
-    return fetchAPI(`/(api)/consultations/${consultationId}/decline`, {
+    return fetchAPI(`/consultations/${consultationId}/decline`, {
       method: 'POST',
       body: JSON.stringify({ doctorId }),
     });
   }
 
   static async startConsultation(consultationId: string) {
-    return fetchAPI(`/(api)/consultations/${consultationId}/start`, {
+    return fetchAPI(`/consultations/${consultationId}/start`, {
       method: 'POST',
     });
   }
 
   static async completeConsultation(consultationId: string) {
-    return fetchAPI(`/(api)/consultations/${consultationId}/complete`, {
+    return fetchAPI(`/consultations/${consultationId}/complete`, {
       method: 'POST',
     });
   }
 
   static async updateDoctorLocation(data: UpdateDoctorLocationDto) {
-    return fetchAPI('/(api)/consultations/doctor/update-location', {
+    return fetchAPI('/consultations/doctor/update-location', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -102,6 +102,6 @@ export class ConsultationService {
       ...(specialty && { specialty }),
     });
 
-    return fetchAPI(`/(api)/consultations/nearby/doctors?${params.toString()}`);
+    return fetchAPI(`/consultations/nearby/doctors?${params.toString()}`);
   }
 }

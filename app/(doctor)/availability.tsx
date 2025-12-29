@@ -48,7 +48,7 @@ const Availability = () => {
 
   useEffect(() => {
     if (user?.id) {
-      fetchAPI(`/(api)/doctor/${user.id}`)
+      fetchAPI(`/doctor/${user.id}`)
         .then((response) => {
           if (response.data) {
             const doctorData = response.data;
@@ -101,7 +101,7 @@ const Availability = () => {
     setSavingData(true);
 
     try {
-      await fetchAPI(`/(api)/doctor/update-settings`, {
+      await fetchAPI(`/doctor/update-settings`, {
         method: 'POST',
         body: JSON.stringify({
           doctorId: user.id,
@@ -125,16 +125,16 @@ const Availability = () => {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-general-500">
-        <ActivityIndicator size="large" color="#0286FF" />
+      <SafeAreaView className="flex-1 items-center justify-center bg-gray-50">
+        <ActivityIndicator size="large" color="#4C7C68" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-general-500">
+    <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView className="p-5">
-        <Text className="mb-5 font-JakartaBold text-2xl">Configurações de Disponibilidade</Text>
+        <Text className="mb-5 font-JakartaBold text-2xl text-gray-900">Configurações de Disponibilidade</Text>
 
         <View className="mb-5 rounded-xl bg-white p-5 shadow-sm">
           <Text className="mb-3 font-JakartaSemiBold text-lg">Status Geral</Text>

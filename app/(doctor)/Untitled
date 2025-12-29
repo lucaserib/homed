@@ -1,0 +1,36 @@
+// app/(doctor)/_layout.tsx
+import { Stack } from 'expo-router';
+import { View } from 'react-native'; // Use View, não SafeAreaView
+import { StatusBar } from 'expo-status-bar';
+
+const DoctorLayout = () => {
+  return (
+    <View className="flex-1 bg-gray-50">
+      {/* Opcional: Controle a cor da status bar aqui */}
+      <StatusBar style="dark" /> 
+      
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        
+        {/* ... suas outras telas ... */}
+        <Stack.Screen
+          name="availability"
+          options={{
+            headerTitle: 'Disponibilidade',
+            headerTitleStyle: { fontFamily: 'Jakarta-SemiBold' },
+          }}
+        />
+        {/* ... restante das telas ... */}
+         <Stack.Screen
+          name="medical-record/[id]"
+          options={{
+            headerTitle: 'Prontuário Médico',
+            headerTitleStyle: { fontFamily: 'Jakarta-SemiBold' },
+          }}
+        />
+      </Stack>
+    </View>
+  );
+};
+
+export default DoctorLayout;
